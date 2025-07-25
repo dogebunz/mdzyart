@@ -4,7 +4,238 @@
   <meta charset="UTF-8">
   <title>Multiplayer Tic-Tac-Toe (Sequential Shape Pick)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Add your CSS here -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #6ec6ff 0%, #2196f3 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fredoka One', cursive;
+            margin: 0;
+        }
+
+        .container {
+            background: #fff;
+            border-radius: 30px;
+            box-shadow: 0 8px 32px rgba(33, 150, 243, 0.2);
+            padding: 32px 24px 24px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-width: 340px;
+            position: relative;
+        }
+
+        h1 {
+            color: #2196f3;
+            margin-bottom: 10px;
+            font-size: 2.2rem;
+            letter-spacing: 2px;
+            text-shadow: 1px 2px 0 #b3e5fc;
+        }
+
+        #status {
+            font-size: 1.2rem;
+            margin-bottom: 18px;
+            color: #1976d2;
+            min-height: 28px;
+            text-align: center;
+        }
+
+        .board {
+            display: grid;
+            grid-template-columns: repeat(3, 70px);
+            grid-template-rows: repeat(3, 70px);
+            gap: 12px;
+            margin-bottom: 18px;
+        }
+
+        .cell {
+            width: 70px;
+            height: 70px;
+            background: #e3f2fd;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.7rem;
+            color: #1976d2;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
+            transition: background 0.2s, transform 0.1s;
+            user-select: none;
+            position: relative;
+        }
+
+        .cell:hover {
+            background: #bbdefb;
+            transform: scale(1.05);
+        }
+
+        .cell.x {
+            color: #ff80ab;
+            text-shadow: 1px 2px 0 #fce4ec;
+        }
+
+        .cell.o {
+            color: #64b5f6;
+            text-shadow: 1px 2px 0 #e3f2fd;
+        }
+
+        .cell.triangle {
+            color: #ffd600;
+            text-shadow: 1px 2px 0 #fffde7;
+        }
+
+        .cell.star {
+            color: #ffb300;
+            text-shadow: 1px 2px 0 #fffde7;
+        }
+
+        .cell.octagon {
+            color: #8d6e63;
+            text-shadow: 1px 2px 0 #d7ccc8;
+        }
+
+        .cell.winner {
+            background: #fff59d !important;
+            animation: winnerPulse 0.7s infinite alternate;
+        }
+
+        @keyframes winnerPulse {
+            0% {
+                box-shadow: 0 0 0 0 #fffde7;
+            }
+
+            100% {
+                box-shadow: 0 0 16px 6px #fffde7;
+            }
+        }
+
+        .footer {
+            margin-top: 18px;
+            font-size: 0.95rem;
+            color: #90caf9;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .room-box {
+            margin-bottom: 18px;
+            text-align: center;
+        }
+
+        .room-input {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid #90caf9;
+            font-size: 1.1rem;
+            margin-right: 8px;
+            width: 120px;
+            text-align: center;
+        }
+
+        .room-btn {
+            background: #2196f3;
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.12);
+            transition: background 0.2s;
+            margin-top: 8px;
+        }
+
+        .room-btn:hover {
+            background: #1976d2;
+        }
+
+        .pick-btns {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .pick-btn {
+            background: #e3f2fd;
+            border: 3px solid transparent;
+            border-radius: 50%;
+            width: 54px;
+            height: 54px;
+            font-size: 1.7rem;
+            color: #2196f3;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.10);
+            transition: background 0.2s, transform 0.1s, border 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 8px;
+        }
+
+        .pick-btn.selected {
+            border: 3px solid #2196f3;
+            background: #bbdefb;
+            transform: scale(1.12);
+        }
+
+        .pick-btn.x {
+            color: #ff80ab;
+        }
+
+        .pick-btn.o {
+            color: #64b5f6;
+        }
+
+        .pick-btn.triangle {
+            color: #ffd600;
+        }
+
+        .pick-btn.star {
+            color: #ffb300;
+        }
+
+        .pick-btn.octagon {
+            color: #8d6e63;
+        }
+
+        .pick-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .start-go-btn {
+            margin-top: 12px;
+            background: #2196f3;
+            color: #fff;
+            border: none;
+            border-radius: 18px;
+            padding: 8px 18px;
+            font-size: 1.1rem;
+            font-family: inherit;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.12);
+            transition: background 0.2s;
+            display: block;
+            width: 100%;
+        }
+
+        .start-go-btn:disabled {
+            background: #90caf9;
+            cursor: not-allowed;
+        }
+
+        .hide {
+            display: none !important;
+        }
+    </style>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
