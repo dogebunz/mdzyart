@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplayer Tic-Tac-Toe (with Chat & Unique Players)</title>
+  <title>Multiplayer Tic-Tac-Toe (with Chat & Auto-Reset)</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     body {
@@ -382,6 +382,24 @@
       roomIdDisplay.textContent = `Room ID: ${ROOM_ID}`;
     }
 
+    // --- Auto-reset room when empty ---
+    function autoResetRoomWhenEmpty() {
+      db.ref('rooms/' + ROOM_ID + '/players').on('value', snap => {
+        const players = snap.val() || {};
+        const connected = Object.values(players).filter(p => p && p.connected);
+        if (connected.length === 0) {
+          // Reset the room: clear board, chat, shapes, turn, winner, but keep the room node
+          db.ref('rooms/' + ROOM_ID).update({
+            board: Array(9).fill(''),
+            turn: null,
+            winner: null,
+            chat: null,
+            players: null // Remove all player nodes
+          });
+        }
+      });
+    }
+
     // --- Player connection logic ---
     function getPlayers(snapshot) {
       const players = snapshot.val() || {};
@@ -667,6 +685,7 @@
     });
 
     // --- Init ---
+    autoResetRoomWhenEmpty();
     joinRoom();
     updateRoomIdDisplay();
   </script>
