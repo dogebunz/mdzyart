@@ -52,9 +52,10 @@ io.on('connection', (socket) => {
     io.to(room).emit('chat', { id: socket.id.slice(0, 5), message });
   });
 
-  socket.on('draw', ({ room, data }) => {
-    socket.to(room).emit('draw', data);
-  });
+  socket.on('draw', data => {
+  drawLine(data.from, data.to, data.color, false);
+});
+
 
   socket.on('disconnect', () => {
     if (currentRoom) {
