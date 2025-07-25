@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Robust Multiplayer Tic-Tac-Toe</title>
+  <title>Multiplayer Tic-Tac-Toe (Robust, Sequential, No CSS)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
@@ -240,30 +240,57 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
-  <div>
-    <h1>Tic-Tac-Toe</h1>
-    <div id="playerCount"></div>
+  <div class="container">
+    <h1>🐾 Multiplayer Tic-Tac-Toe</h1>
+    <div class="player-count" id="playerCount"></div>
     <div id="roomIdDisplay"></div>
-    <div id="errorMsg"></div>
+    <div id="errorMsg" class="error-msg"></div>
     <div id="pickShapesBox" style="display:none;">
       <div id="pickMsg"></div>
-      <div id="pickBtns">
-        <button data-shape="X">✖️</button>
-        <button data-shape="O">⭕</button>
-        <button data-shape="▲">▲</button>
-        <button data-shape="⭐">⭐</button>
-        <button data-shape="⬣">⬣</button>
+      <div class="pick-btns" id="pickBtns">
+        <button class="pick-btn x" data-shape="X" title="X">✖️</button>
+        <button class="pick-btn o" data-shape="O" title="O">⭕</button>
+        <button class="pick-btn triangle" data-shape="▲" title="Triangle">▲</button>
+        <button class="pick-btn star" data-shape="⭐" title="Star">⭐</button>
+        <button class="pick-btn octagon" data-shape="⬣" title="Octagon">⬣</button>
       </div>
-      <button id="pickGoBtn" disabled>Confirm</button>
+      <button class="start-go-btn" id="pickGoBtn" disabled>Confirm</button>
     </div>
     <div id="gameBox" style="display:none;">
-      <div id="status"></div>
-      <div id="board" style="display:grid;grid-template-columns:repeat(3,40px);gap:4px;"></div>
-      <button id="leaveBtn">Leave Room</button>
+      <div id="status">Player <span id="current-player">X</span>'s turn</div>
+      <div class="board" id="board"></div>
+      <!-- Chat UI -->
+      <div class="chat-container" id="chatContainer">
+        <div class="emoji-bar" id="emojiBar">
+          <button class="emoji-btn">😀</button>
+          <button class="emoji-btn">😂</button>
+          <button class="emoji-btn">😍</button>
+          <button class="emoji-btn">😎</button>
+          <button class="emoji-btn">👍</button>
+          <button class="emoji-btn">🎉</button>
+          <button class="emoji-btn">😺</button>
+          <button class="emoji-btn">❌</button>
+          <button class="emoji-btn">⭕</button>
+          <button class="emoji-btn">⭐</button>
+          <button class="emoji-btn">⬣</button>
+          <button class="emoji-btn">▲</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" maxlength="120" placeholder="Type a message or emoji...">
+          <button class="chat-send-btn" id="chatSendBtn" disabled>Send</button>
+        </div>
+      </div>
+      <button class="start-go-btn" id="leaveBtn" style="margin-top:10px;">Leave Room</button>
     </div>
+    <div class="footer">Made with 💙 for you!</div>
   </div>
+  <audio id="moveSound" src="move.mp3"></audio>
+  <audio id="winSound" src="win.mp3"></audio>
+  <audio id="drawSound" src="draw.mp3"></audio>
+  <audio id="bgMusic" src="cute.mp3" loop></audio>
   <script>
-    // Firebase config
+    // --- Your Firebase config ---
     const firebaseConfig = {
       apiKey: "AIzaSyBvuCa11QrFayslcyd0VQBy_u9iS5rmGAw",
       authDomain: "mdzyart.firebaseapp.com",
@@ -276,7 +303,7 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // UI
+    // --- UI elements ---
     const playerCountEl = document.getElementById('playerCount');
     const roomIdDisplay = document.getElementById('roomIdDisplay');
     const errorMsgEl = document.getElementById('errorMsg');
@@ -287,9 +314,19 @@
     const gameBox = document.getElementById('gameBox');
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
+    const currentPlayerEl = document.getElementById('current-player');
     const leaveBtn = document.getElementById('leaveBtn');
+    const moveSound = document.getElementById('moveSound');
+    const winSound = document.getElementById('winSound');
+    const drawSound = document.getElementById('drawSound');
+    const bgMusic = document.getElementById('bgMusic');
+    // Chat
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    const emojiBar = document.getElementById('emojiBar');
 
-    // Game state
+    // --- Game state ---
     const shapes = [
       { key: 'X', icon: '✖️' },
       { key: 'O', icon: '⭕' },
@@ -309,12 +346,33 @@
     let selectedShape = null;
     let unsubscribe = null;
 
+    // --- Music ---
+    bgMusic.volume = 1.0;
+    document.body.addEventListener('mousedown', () => { bgMusic.play().catch(()=>{}); }, { once: true });
+
+    // --- Room ID display ---
     function updateRoomIdDisplay() {
       roomIdDisplay.textContent = `Room ID: ${ROOM_ID}`;
     }
-    function showError(msg) { errorMsgEl.textContent = msg; }
-    function clearError() { errorMsgEl.textContent = ""; }
 
+    // --- Auto-reset room when empty ---
+    function autoResetRoomWhenEmpty() {
+      db.ref('rooms/' + ROOM_ID + '/players').on('value', snap => {
+        const players = snap.val() || {};
+        const active = Object.values(players).filter(p => p && p.connected && p.shape);
+        if (active.length === 0) {
+          db.ref('rooms/' + ROOM_ID + '/chat').remove();
+          db.ref('rooms/' + ROOM_ID).update({
+            board: Array(9).fill(''),
+            turn: null,
+            winner: null,
+            players: null
+          });
+        }
+      });
+    }
+
+    // --- Player connection logic ---
     function getAllPlayers(snapshot) {
       const players = snapshot.val() || {};
       return Object.entries(players)
@@ -330,7 +388,21 @@
         .map(([id, p]) => ({ id, ...p }));
     }
 
+    function updatePlayerCount(count) {
+      playerCountEl.textContent = `Players in game: ${count}/2`;
+      updateRoomIdDisplay();
+    }
+
+    function showError(msg) {
+      errorMsgEl.textContent = msg;
+    }
+    function clearError() {
+      errorMsgEl.textContent = "";
+    }
+
+    // --- Join default room ---
     async function joinRoom() {
+      // Ensure room exists
       await db.ref('rooms/' + ROOM_ID).set({
         created: Date.now(),
         players: {},
@@ -338,17 +410,20 @@
         turn: null,
         winner: null
       });
+
+      // Add yourself to the players list with a timestamp, but not connected yet
       playerRef = db.ref(`rooms/${ROOM_ID}/players/${playerId}`);
       await playerRef.set({ joined: Date.now(), shape: null });
       playerRef.onDisconnect().remove();
 
+      // Listen for player list changes
       db.ref('rooms/' + ROOM_ID + '/players').on('value', snap => {
         const allPlayers = getAllPlayers(snap);
         const activePlayers = getActivePlayers(snap);
 
-        playerCountEl.textContent = `Players in game: ${activePlayers.length}/2`;
-        updateRoomIdDisplay();
+        updatePlayerCount(activePlayers.length);
 
+        // Assign playerNum based on join order
         const myIndex = allPlayers.findIndex(p => p.id === playerId);
         playerNum = myIndex === 0 ? 1 : 2;
 
@@ -359,7 +434,7 @@
           return;
         }
 
-        // Sequential shape picking
+        // --- Sequential shape picking logic ---
         if (playerNum === 1) {
           if (!allPlayers[0].shape) {
             showPickShapes("You are Player 1. Pick your shape!");
@@ -453,6 +528,7 @@
         if (!data) return;
         renderBoard(data.board, data.turn, data.winner, data.players);
       });
+      subscribeToChat();
     }
     function renderBoard(board, turn, winner, playersObj) {
       boardEl.innerHTML = '';
@@ -530,8 +606,51 @@
       showPickShapes("Pick your shape:");
     };
 
-    // --- Chat logic (optional, add if you want) ---
-    // ... (see previous code for chat logic) ...
+    // --- Chat logic ---
+    function subscribeToChat() {
+      db.ref(`rooms/${ROOM_ID}/chat`).off();
+      db.ref(`rooms/${ROOM_ID}/chat`).limitToLast(30).on('value', snap => {
+        const msgs = snap.val() || {};
+        chatMessages.innerHTML = "";
+        Object.values(msgs).forEach(msg => {
+          const div = document.createElement('div');
+          div.className = "chat-msg" + (msg.senderId === playerId ? " me" : "");
+          div.innerHTML = `<span class="sender">${msg.senderName || msg.senderId}:</span> <span class="msg">${msg.text}</span>`;
+          chatMessages.appendChild(div);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      });
+    }
+    function sendChatMessage(text) {
+      if (!text.trim()) return;
+      const msg = {
+        senderId: playerId,
+        senderName: playerShape || playerId,
+        text: text.trim(),
+        ts: Date.now()
+      };
+      db.ref(`rooms/${ROOM_ID}/chat`).push(msg);
+    }
+    chatInput.addEventListener('input', () => {
+      chatSendBtn.disabled = !chatInput.value.trim();
+    });
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === "Enter" && !chatSendBtn.disabled) {
+        chatSendBtn.click();
+      }
+    });
+    chatSendBtn.onclick = () => {
+      sendChatMessage(chatInput.value);
+      chatInput.value = "";
+      chatSendBtn.disabled = true;
+    };
+    emojiBar.addEventListener('click', e => {
+      if (e.target.classList.contains('emoji-btn')) {
+        chatInput.value += e.target.textContent;
+        chatInput.focus();
+        chatSendBtn.disabled = !chatInput.value.trim();
+      }
+    });
 
     // --- Init ---
     autoResetRoomWhenEmpty();
