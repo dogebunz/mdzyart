@@ -63,4 +63,172 @@
       <button type="button" id="leave-btn" class="btn btn-danger" disabled>Leave</button>
     </form>
     <div class="d-flex justify-content-center mb-2">
-      <button id="clear-btn" class="btn btn-warning fw-bold">Clear Canvas</
+      <button id="clear-btn" class="btn btn-warning fw-bold">Clear Canvas</button>
+    </div>
+    <canvas id="canvas" width="900" height="500"></canvas>
+    <div id="chat-box"></div>
+    <form id="chat-form" autocomplete="off">
+      <input type="text" id="chat-input" class="form-control" placeholder="Type a message..." style="max-width: 300px;">
+      <button type="submit" class="btn btn-light">Send</button>
+    </form>
+  </div>
+
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    // === CONFIG ===
+    // CHANGE THIS to your backend URL!
+    const SERVER_URL = 'https://YOUR-BACKEND-URL.onrender.com'; // <--- CHANGE THIS
+
+    // === SOCKET.IO ===
+    const socket = io(SERVER_URL);
+
+    let currentRoom = null;
+
+    // === ROOM JOIN/LEAVE ===
+    const roomForm = document.getElementById('room-form');
+    const roomInput = document.getElementById('room-input');
+    const leaveBtn = document.getElementById('leave-btn');
+
+    roomForm.onsubmit = e => {
+      e.preventDefault();
+      const room = roomInput.value.trim();
+      if (!room) return;
+      socket.emit('joinRoom', room);
+      currentRoom = room;
+      leaveBtn.disabled = false;
+      roomInput.disabled = true;
+    };
+
+    leaveBtn.onclick = () => {
+      if (currentRoom) {
+        socket.emit('leaveRoom', currentRoom);
+        currentRoom = null;
+        leaveBtn.disabled = true;
+        roomInput.disabled = false;
+      }
+    };
+
+    // === CHAT ===
+    const chatBox = document.getElementById('chat-box');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+
+    function addMessage(msg, system = false) {
+      const div = document.createElement('div');
+      div.innerHTML = msg;
+      if (system) div.style.fontStyle = 'italic';
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    socket.on('chat', ({ id, message }) => {
+      addMessage(`<b>${id}:</b> ${message}`);
+    });
+    socket.on('system', msg => addMessage(`<span style="color:#1976d2">${msg}</span>`, true));
+
+    chatForm.onsubmit = e => {
+      e.preventDefault();
+      if (!currentRoom) return;
+      const msg = chatInput.value.trim();
+      if (!msg) return;
+      socket.emit('chat', { room: currentRoom, message: msg });
+      chatInput.value = '';
+    };
+
+    // === CANVAS DRAWING ===
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false, last = null;
+
+    function getPos(e) {
+      const rect = canvas.getBoundingClientRect();
+      if (e.touches && e.touches.length > 0) {
+        return {
+          x: (e.touches[0].clientX - rect.left) * (canvas.width / rect.width),
+          y: (e.touches[0].clientY - rect.top) * (canvas.height / rect.height)
+        };
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        return {
+          x: (e.changedTouches[0].clientX - rect.left) * (canvas.width / rect.width),
+          y: (e.changedTouches[0].clientY - rect.top) * (canvas.height / rect.height)
+        };
+      } else {
+        return {
+          x: e.offsetX,
+          y: e.offsetY
+        };
+      }
+    }
+
+    function drawLine(from, to, color = '#1976d2', emit = true) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+      ctx.closePath();
+      if (emit && currentRoom) {
+        socket.emit('draw', { room: currentRoom, data: { from, to, color } });
+      }
+    }
+
+    function startDraw(e) {
+      if (!currentRoom) return;
+      drawing = true;
+      last = getPos(e);
+      e.preventDefault();
+    }
+    function moveDraw(e) {
+      if (!drawing || !currentRoom) return;
+      const pos = getPos(e);
+      drawLine(last, pos);
+      last = pos;
+      e.preventDefault();
+    }
+    function endDraw(e) {
+      drawing = false;
+      last = null;
+      if (e) e.preventDefault();
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', moveDraw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+
+    // Touch events
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', moveDraw, { passive: false });
+    canvas.addEventListener('touchend', endDraw, { passive: false });
+    canvas.addEventListener('touchcancel', endDraw, { passive: false });
+
+    // Receive drawing from others
+    socket.on('draw', data => {
+      drawLine(data.from, data.to, data.color, false);
+    });
+
+    // === CLEAR CANVAS ===
+    const clearBtn = document.getElementById('clear-btn');
+    function clearCanvas(emit = true) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      if (emit && currentRoom) {
+        socket.emit('clear', { room: currentRoom });
+      }
+    }
+    clearBtn.onclick = () => clearCanvas();
+
+    socket.on('clear', () => clearCanvas(false));
+
+    // === CLEAR CANVAS ON ROOM CHANGE ===
+    socket.on('system', msg => {
+      if (msg.includes('joined')) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    });
+  </script>
+</body>
+</html>
