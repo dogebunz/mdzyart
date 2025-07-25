@@ -31,6 +31,10 @@ const io = new Server(server, {
 io.on('connection', (socket) => {
   let currentRoom = null;
 
+  socket.on('clear', ({ room }) => {
+  socket.to(room).emit('clear');
+  });
+  
   socket.on('joinRoom', (room) => {
     if (currentRoom) socket.leave(currentRoom);
     currentRoom = room;
