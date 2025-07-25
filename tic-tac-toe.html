@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplayer Tic-Tac-Toe (Robust, Mobile)</title>
+  <title>Multiplayer Tic-Tac-Toe (Robust, Sequential, No CSS)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Add your CSS here -->
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
         body {
@@ -237,7 +236,6 @@
             display: none !important;
         }
     </style>
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
@@ -248,7 +246,7 @@
     <div id="roomIdDisplay"></div>
     <div id="errorMsg" class="error-msg"></div>
     <div id="pickShapesBox" class="hide">
-      <div>Pick your shape:</div>
+      <div id="pickMsg"></div>
       <div class="pick-btns" id="pickBtns">
         <button class="pick-btn x" data-shape="X" title="X">✖️</button>
         <button class="pick-btn o" data-shape="O" title="O">⭕</button>
@@ -312,6 +310,7 @@
     const pickShapesBox = document.getElementById('pickShapesBox');
     const pickBtns = document.getElementById('pickBtns');
     const pickGoBtn = document.getElementById('pickGoBtn');
+    const pickMsg = document.getElementById('pickMsg');
     const gameBox = document.getElementById('gameBox');
     const boardEl = document.getElementById('board');
     const statusEl = document.getElementById('status');
@@ -340,11 +339,12 @@
       return 'player-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
     }
     let playerId = generatePlayerId();
+    let playerNum = null; // 1 or 2
     let playerShape = null;
     let opponentShape = null;
-    let unsubscribe = null;
     let playerRef = null;
     let selectedShape = null;
+    let unsubscribe = null;
 
     // --- Music ---
     bgMusic.volume = 1.0;
@@ -361,11 +361,11 @@
         const players = snap.val() || {};
         const active = Object.values(players).filter(p => p && p.connected && p.shape);
         if (active.length === 0) {
+          db.ref('rooms/' + ROOM_ID + '/chat').remove();
           db.ref('rooms/' + ROOM_ID).update({
             board: Array(9).fill(''),
             turn: null,
             winner: null,
-            chat: null,
             players: null
           });
         }
@@ -373,16 +373,18 @@
     }
 
     // --- Player connection logic ---
-    function getActivePlayers(snapshot) {
-      const players = snapshot.val() || {};
-      return Object.entries(players)
-        .filter(([id, p]) => p && p.connected && p.shape)
-        .map(([id, p]) => ({ id, ...p }));
-    }
     function getAllPlayers(snapshot) {
       const players = snapshot.val() || {};
       return Object.entries(players)
         .filter(([id, p]) => p)
+        .sort((a, b) => a[1].joined - b[1].joined)
+        .map(([id, p]) => ({ id, ...p }));
+    }
+    function getActivePlayers(snapshot) {
+      const players = snapshot.val() || {};
+      return Object.entries(players)
+        .filter(([id, p]) => p && p.connected && p.shape)
+        .sort((a, b) => a[1].joined - b[1].joined)
         .map(([id, p]) => ({ id, ...p }));
     }
 
@@ -421,6 +423,10 @@
 
         updatePlayerCount(activePlayers.length);
 
+        // Assign playerNum based on join order
+        const myIndex = allPlayers.findIndex(p => p.id === playerId);
+        playerNum = myIndex === 0 ? 1 : 2;
+
         // Only block if there are already 2 active players (who picked a shape)
         if (activePlayers.length >= 2 && !activePlayers.some(p => p.id === playerId)) {
           showError("Room is full! Only 2 players allowed.");
@@ -429,18 +435,48 @@
           return;
         }
 
-        // If already joined, update shape buttons for opponent's pick
-        updateShapeButtons(allPlayers);
+        // --- Sequential shape picking logic ---
+        if (playerNum === 1) {
+          // Player 1: can pick if not picked yet
+          if (!allPlayers[0].shape) {
+            showPickShapes("You are Player 1. Pick your shape!");
+            updateShapeButtons([]);
+          } else if (!activePlayers.some(p => p.id === playerId)) {
+            // Picked, but not confirmed yet
+            showPickShapes("Waiting for Player 2 to join...");
+            updateShapeButtons([allPlayers[0]]);
+            pickBtns.style.pointerEvents = "none";
+            pickGoBtn.disabled = true;
+          }
+        } else if (playerNum === 2) {
+          // Player 2: wait for Player 1 to pick
+          if (!allPlayers[0].shape) {
+            showPickShapes("Waiting for Player 1 to pick a shape...");
+            updateShapeButtons([]);
+            pickBtns.style.pointerEvents = "none";
+            pickGoBtn.disabled = true;
+          } else if (!allPlayers[1].shape) {
+            // Now Player 2 can pick, but only from remaining shapes
+            showPickShapes("You are Player 2. Pick your shape!");
+            updateShapeButtons([allPlayers[0]]);
+            pickBtns.style.pointerEvents = "";
+          }
+        }
 
-        // Show shape picker if not picked yet
-        if (!activePlayers.some(p => p.id === playerId)) {
-          showPickShapes();
-          clearError();
-        } else if (activePlayers.length === 2) {
-          // Both shapes picked, start game
+        // If both shapes picked, set initial turn and start game
+        if (activePlayers.length === 2) {
           const [p1, p2] = activePlayers;
           playerShape = p1.id === playerId ? p1.shape : p2.shape;
           opponentShape = p1.id === playerId ? p2.shape : p1.shape;
+
+          // Set initial turn if not set
+          db.ref('rooms/' + ROOM_ID + '/turn').get().then(turnSnap => {
+            if (!turnSnap.exists()) {
+              const first = Math.random() < 0.5 ? p1.shape : p2.shape;
+              db.ref('rooms/' + ROOM_ID + '/turn').set(first);
+            }
+          });
+
           showGame();
           subscribeToGame();
           db.ref(`rooms/${ROOM_ID}/players`).off();
@@ -450,22 +486,22 @@
     }
 
     // --- Shape selection ---
-    function updateShapeButtons(allPlayers) {
-      // Find shapes already picked
-      const pickedShapes = allPlayers.filter(p => p.shape).map(p => p.shape);
+    function updateShapeButtons(lockedPlayers) {
+      const pickedShapes = lockedPlayers.filter(p => p.shape).map(p => p.shape);
       Array.from(pickBtns.children).forEach(btn => {
         const shape = btn.getAttribute('data-shape');
         btn.disabled = pickedShapes.includes(shape) && selectedShape !== shape;
         btn.classList.toggle('selected', selectedShape === shape);
       });
-      pickGoBtn.disabled = !selectedShape || (pickedShapes.includes(selectedShape) && !allPlayers.some(p => p.id === playerId && p.shape === selectedShape));
+      pickGoBtn.disabled = !selectedShape || pickedShapes.includes(selectedShape);
     }
 
     pickBtns.addEventListener('click', function(e) {
       if (!e.target.classList.contains('pick-btn')) return;
+      if (pickBtns.style.pointerEvents === "none") return;
       const shape = e.target.getAttribute('data-shape');
       selectedShape = shape;
-      updateShapeButtons([{id: playerId, shape: selectedShape}]);
+      updateShapeButtons([{id: "locked", shape: selectedShape}]);
     });
 
     pickGoBtn.onclick = async () => {
@@ -476,9 +512,10 @@
       showError("Waiting for opponent to pick...");
     };
 
-    function showPickShapes() {
+    function showPickShapes(msg) {
       pickShapesBox.classList.remove('hide');
       gameBox.classList.add('hide');
+      pickMsg.textContent = msg;
       Array.from(pickBtns.children).forEach(btn => {
         btn.classList.remove('selected');
         btn.disabled = false;
@@ -529,15 +566,12 @@
       }
     }
     async function makeMove(idx, board, playersObj) {
-      // Only allow if it's your turn and cell is empty
       const snap = await db.ref('rooms/' + ROOM_ID).get();
       const data = snap.val();
       if (data.turn !== playerShape || data.board[idx] || data.winner) return;
       board[idx] = playerShape;
       playMoveSound();
-      // Check winner
       const winner = checkWinner(board);
-      // Find opponent's shape
       const players = Object.entries(playersObj || {})
         .filter(([id, p]) => p && p.connected && p.shape)
         .map(([id, p]) => ({ id, ...p }));
@@ -575,9 +609,7 @@
       playerShape = null;
       opponentShape = null;
       unsubscribe && db.ref('rooms/' + ROOM_ID).off();
-      showPickShapes();
-      // Clear chat
-      chatMessages.innerHTML = "";
+      showPickShapes("Pick your shape:");
     };
 
     // --- Sound helpers ---
