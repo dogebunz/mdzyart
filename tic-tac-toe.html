@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Cute Tic-Tac-Toe</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #6ec6ff 0%, #2196f3 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka One', cursive;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      border-radius: 30px;
+      box-shadow: 0 8px 32px rgba(33,150,243,0.2);
+      padding: 32px 24px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 340px;
+      position: relative;
+    }
+    h1 {
+      color: #2196f3;
+      margin-bottom: 10px;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      text-shadow: 1px 2px 0 #b3e5fc;
+    }
+    #status {
+      font-size: 1.2rem;
+      margin-bottom: 18px;
+      color: #1976d2;
+      min-height: 28px;
+      text-align: center;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 70px);
+      grid-template-rows: repeat(3, 70px);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .cell {
+      width: 70px;
+      height: 70px;
+      background: #e3f2fd;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.7rem;
+      color: #1976d2;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+      transition: background 0.2s, transform 0.1s;
+      user-select: none;
+      position: relative;
+    }
+    .cell:hover {
+      background: #bbdefb;
+      transform: scale(1.05);
+    }
+    .cell.x {
+      color: #ff80ab;
+      text-shadow: 1px 2px 0 #fce4ec;
+    }
+    .cell.o {
+      color: #64b5f6;
+      text-shadow: 1px 2px 0 #e3f2fd;
+    }
+    .cell.winner {
+      background: #fff59d !important;
+      animation: winnerPulse 0.7s infinite alternate;
+    }
+    @keyframes winnerPulse {
+      0% { box-shadow: 0 0 0 0 #fffde7; }
+      100% { box-shadow: 0 0 16px 6px #fffde7; }
+    }
+    .reset-btn {
+      background: #2196f3;
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      padding: 10px 28px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.12);
+      transition: background 0.2s;
+      margin-top: 8px;
+    }
+    .reset-btn:hover {
+      background: #1976d2;
+    }
+    .footer {
+      margin-top: 18px;
+      font-size: 0.95rem;
+      color: #90caf9;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    .music-btn {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      background: #e3f2fd;
+      border: none;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.10);
+      transition: background 0.2s;
+      font-size: 1.5rem;
+      color: #2196f3;
+      z-index: 2;
+    }
+    .music-btn:hover {
+      background: #bbdefb;
+    }
+    /* Start overlay styles */
+    .start-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(33,150,243,0.95);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      transition: opacity 0.4s;
+    }
+    .start-overlay.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .start-box {
+      background: #fff;
+      border-radius: 24px;
+      box-shadow: 0 4px 24px rgba(33,150,243,0.18);
+      padding: 36px 32px 28px 32px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 280px;
+      animation: popIn 0.7s cubic-bezier(.68,-0.55,.27,1.55);
+    }
+    @keyframes popIn {
+      0% { transform: scale(0.7); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .start-title {
+      color: #2196f3;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    .start-msg {
+      color: #1976d2;
+      font-size: 1.1rem;
+      margin-bottom: 22px;
+      text-align: center;
+    }
+    .pick-btns {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 8px;
+    }
+    .pick-btn {
+      background: #e3f2fd;
+      border: none;
+      border-radius: 50%;
+      width: 64px;
+      height: 64px;
+      font-size: 2.2rem;
+      color: #2196f3;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.10);
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .pick-btn:hover {
+      background: #bbdefb;
+      transform: scale(1.1);
+    }
+    .pick-btn.x { color: #ff80ab; }
+    .pick-btn.o { color: #64b5f6; }
+  </style>
+</head>
+<body>
+  <!-- Start overlay -->
+  <div class="start-overlay" id="startOverlay">
+    <div class="start-box">
+      <div class="start-title">🐾 Welcome to Tic-Tac-Toe!</div>
+      <div class="start-msg">Who do you want to play as?</div>
+      <div class="pick-btns">
+        <button class="pick-btn x" id="pickX" title="Play as X">✖️</button>
+        <button class="pick-btn o" id="pickO" title="Play as O">⭕</button>
+      </div>
+      <div style="color:#90caf9;font-size:0.95rem;margin-top:10px;">Enjoy the game!</div>
+    </div>
+  </div>
+
+  <div class="container">
+    <button class="music-btn" id="musicBtn" title="Play/Pause Music">🎵</button>
+    <h1>🐾 Tic-Tac-Toe</h1>
+    <div id="status">Player <span id="current-player">X</span>'s turn</div>
+    <div class="board" id="board"></div>
+    <button class="reset-btn" id="resetBtn">Restart</button>
+    <div class="footer">Made with 💙 for you!</div>
+  </div>
+
+  <!-- Sound effects (replace with your own if you want) -->
+  <audio id="moveSound" src="move.mp3"></audio>
+  <audio id="winSound" src="win.mp3"></audio>
+  <audio id="drawSound" src="draw.mp3"></audio>
+  <!-- Local background music -->
+  <audio id="bgMusic" src="cute.mp3" loop></audio>
+
+  <script>
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const currentPlayerEl = document.getElementById('current-player');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // Sound elements
+    const moveSound = document.getElementById('moveSound');
+    const winSound = document.getElementById('winSound');
+    const drawSound = document.getElementById('drawSound');
+    const bgMusic = document.getElementById('bgMusic');
+    const musicBtn = document.getElementById('musicBtn');
+
+    // Start overlay elements
+    const startOverlay = document.getElementById('startOverlay');
+    const pickX = document.getElementById('pickX');
+    const pickO = document.getElementById('pickO');
+
+    // Set background music volume to 100%
+    bgMusic.volume = 1.0;
+
+    // Music state
+    let musicPlaying = false;
+
+    // Play/pause music on button click
+    musicBtn.addEventListener('click', function() {
+      if (bgMusic.paused) {
+        bgMusic.play();
+        musicBtn.textContent = "🔊";
+        musicPlaying = true;
+      } else {
+        bgMusic.pause();
+        musicBtn.textContent = "🎵";
+        musicPlaying = false;
+      }
+    });
+
+    // Start music after first user interaction (autoplay policy)
+    function enableMusicOnce() {
+      if (!musicPlaying) {
+        bgMusic.play().then(() => {
+          musicBtn.textContent = "🔊";
+          musicPlaying = true;
+        }).catch(()=>{});
+      }
+      document.body.removeEventListener('mousedown', enableMusicOnce);
+      document.body.removeEventListener('touchstart', enableMusicOnce);
+    }
+    document.body.addEventListener('mousedown', enableMusicOnce);
+    document.body.addEventListener('touchstart', enableMusicOnce);
+
+    // Game state
+    let board, currentPlayer, gameActive, winnerCells, firstPlayer;
+
+    function showStartOverlay() {
+      startOverlay.classList.remove('hide');
+    }
+    function hideStartOverlay() {
+      startOverlay.classList.add('hide');
+      setTimeout(() => { startOverlay.style.display = 'none'; }, 400);
+    }
+
+    function startGame(player) {
+      firstPlayer = player;
+      currentPlayer = player;
+      hideStartOverlay();
+      initGame();
+    }
+
+    pickX.addEventListener('click', () => startGame('X'));
+    pickO.addEventListener('click', () => startGame('O'));
+
+    function initGame() {
+      board = Array(9).fill('');
+      currentPlayer = firstPlayer || 'X';
+      gameActive = true;
+      winnerCells = [];
+      renderBoard();
+      updateStatus();
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell' + (board[i] ? ' ' + board[i].toLowerCase() : '');
+        if (winnerCells.includes(i)) cell.classList.add('winner');
+        cell.dataset.index = i;
+        cell.innerHTML = board[i] === 'X' ? '✖️' : board[i] === 'O' ? '⭕' : '';
+        cell.addEventListener('click', onCellClick);
+        boardEl.appendChild(cell);
+      }
+    }
+
+    function onCellClick(e) {
+      const idx = +e.currentTarget.dataset.index;
+      if (!gameActive || board[idx]) return;
+      board[idx] = currentPlayer;
+      playMoveSound();
+      renderBoard();
+      if (checkWinner()) {
+        statusEl.innerHTML = `🎉 Player <span id="current-player">${currentPlayer}</span> wins!`;
+        gameActive = false;
+        highlightWinner();
+        playWinSound();
+      } else if (board.every(cell => cell)) {
+        statusEl.textContent = "It's a draw! 😺";
+        gameActive = false;
+        playDrawSound();
+      } else {
+        currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+        updateStatus();
+      }
+    }
+
+    function updateStatus() {
+      currentPlayerEl.textContent = currentPlayer;
+      statusEl.innerHTML = `Player <span id="current-player">${currentPlayer}</span>'s turn`;
+    }
+
+    function checkWinner() {
+      const winPatterns = [
+        [0,1,2],[3,4,5],[6,7,8], // rows
+        [0,3,6],[1,4,7],[2,5,8], // cols
+        [0,4,8],[2,4,6]          // diags
+      ];
+      for (let pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          winnerCells = pattern;
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function highlightWinner() {
+      renderBoard();
+    }
+
+    function playMoveSound() {
+      if (moveSound) {
+        moveSound.currentTime = 0;
+        moveSound.play().catch(()=>{});
+      }
+    }
+    function playWinSound() {
+      if (winSound) {
+        winSound.currentTime = 0;
+        winSound.play().catch(()=>{});
+      }
+    }
+    function playDrawSound() {
+      if (drawSound) {
+        drawSound.currentTime = 0;
+        drawSound.play().catch(()=>{});
+      }
+    }
+
+    resetBtn.addEventListener('click', function() {
+      showStartOverlay();
+      // Reset overlay for next game
+      startOverlay.style.display = '';
+      setTimeout(() => startOverlay.classList.remove('hide'), 10);
+    });
+
+    // Show start overlay on load
+    showStartOverlay();
+  </script>
+</body>
+</html>
