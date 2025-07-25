@@ -2,69 +2,91 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplayer Tic-Tac-Toe (with Chat & Auto-Reset)</title>
+  <title>Multiplayer Tic-Tac-Toe (Mobile Friendly)</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
     body {
       background: linear-gradient(135deg, #6ec6ff 0%, #2196f3 100%);
       min-height: 100vh;
+      min-height: 100dvh;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-family: 'Fredoka One', cursive;
+      font-family: 'Fredoka One', cursive, Arial, sans-serif;
       margin: 0;
     }
     .container {
       background: #fff;
       border-radius: 30px;
       box-shadow: 0 8px 32px rgba(33,150,243,0.2);
-      padding: 32px 24px 24px 24px;
+      padding: 24px 10px 16px 10px;
       display: flex;
       flex-direction: column;
       align-items: center;
-      min-width: 340px;
+      min-width: 90vw;
+      max-width: 420px;
+      width: 100%;
       position: relative;
     }
     h1 {
       color: #2196f3;
       margin-bottom: 10px;
-      font-size: 2.2rem;
+      font-size: 2rem;
       letter-spacing: 2px;
       text-shadow: 1px 2px 0 #b3e5fc;
+      text-align: center;
     }
     #status {
-      font-size: 1.2rem;
-      margin-bottom: 18px;
+      font-size: 1.1rem;
+      margin-bottom: 14px;
       color: #1976d2;
       min-height: 28px;
       text-align: center;
     }
     .board {
       display: grid;
-      grid-template-columns: repeat(3, 70px);
-      grid-template-rows: repeat(3, 70px);
-      gap: 12px;
-      margin-bottom: 18px;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+      width: 100%;
+      max-width: 320px;
+      aspect-ratio: 1/1;
+      min-width: 240px;
+      min-height: 240px;
+      touch-action: manipulation;
     }
     .cell {
-      width: 70px;
-      height: 70px;
+      width: 100%;
+      height: 0;
+      padding-bottom: 100%;
       background: #e3f2fd;
       border-radius: 18px;
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 2.7rem;
+      font-size: 2.2rem;
       color: #1976d2;
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(33,150,243,0.08);
       transition: background 0.2s, transform 0.1s;
       user-select: none;
       position: relative;
+      overflow: hidden;
     }
-    .cell:hover {
-      background: #bbdefb;
-      transform: scale(1.05);
+    .cell-inner {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+      text-align: center;
+      line-height: 1;
     }
     .cell.x { color: #ff80ab; text-shadow: 1px 2px 0 #fce4ec; }
     .cell.o { color: #64b5f6; text-shadow: 1px 2px 0 #e3f2fd; }
@@ -80,27 +102,28 @@
       100% { box-shadow: 0 0 16px 6px #fffde7; }
     }
     .footer {
-      margin-top: 18px;
+      margin-top: 12px;
       font-size: 0.95rem;
       color: #90caf9;
       text-align: center;
       letter-spacing: 1px;
     }
     .player-count {
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       color: #1976d2;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       text-align: center;
     }
     #roomIdDisplay {
       color:#1976d2;
-      font-size:1.1rem;
+      font-size:1.05rem;
       text-align:center;
-      margin-bottom:10px;
+      margin-bottom:8px;
+      word-break: break-all;
     }
     .pick-btns {
       display: flex;
-      gap: 12px;
+      gap: 8px;
       margin-bottom: 8px;
       flex-wrap: wrap;
       justify-content: center;
@@ -109,9 +132,9 @@
       background: #e3f2fd;
       border: 3px solid transparent;
       border-radius: 50%;
-      width: 54px;
-      height: 54px;
-      font-size: 1.7rem;
+      width: 48px;
+      height: 48px;
+      font-size: 1.4rem;
       color: #2196f3;
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(33,150,243,0.10);
@@ -120,6 +143,7 @@
       align-items: center;
       justify-content: center;
       margin-bottom: 8px;
+      outline: none;
     }
     .pick-btn.selected {
       border: 3px solid #2196f3;
@@ -136,19 +160,22 @@
       cursor: not-allowed;
     }
     .start-go-btn {
-      margin-top: 12px;
+      margin-top: 10px;
       background: #2196f3;
       color: #fff;
       border: none;
       border-radius: 18px;
       padding: 8px 18px;
-      font-size: 1.1rem;
+      font-size: 1.05rem;
       font-family: inherit;
       cursor: pointer;
       box-shadow: 0 2px 8px rgba(33,150,243,0.12);
       transition: background 0.2s;
       display: block;
       width: 100%;
+      max-width: 200px;
+      margin-left: auto;
+      margin-right: auto;
     }
     .start-go-btn:disabled {
       background: #90caf9;
@@ -157,8 +184,8 @@
     .hide { display: none !important; }
     .error-msg {
       color: #d32f2f;
-      font-size: 1.1rem;
-      margin-bottom: 10px;
+      font-size: 1.05rem;
+      margin-bottom: 8px;
       text-align: center;
     }
     /* Chat styles */
@@ -167,27 +194,27 @@
       max-width: 340px;
       background: #e3f2fd;
       border-radius: 18px;
-      margin-top: 10px;
-      padding: 10px 10px 6px 10px;
+      margin-top: 8px;
+      padding: 8px 8px 4px 8px;
       box-shadow: 0 2px 8px rgba(33,150,243,0.08);
       display: flex;
       flex-direction: column;
       align-items: stretch;
     }
     .chat-messages {
-      min-height: 60px;
-      max-height: 120px;
+      min-height: 48px;
+      max-height: 100px;
       overflow-y: auto;
-      margin-bottom: 6px;
-      font-size: 1.08rem;
+      margin-bottom: 4px;
+      font-size: 1.02rem;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 3px;
     }
     .chat-msg {
       display: flex;
       align-items: flex-end;
-      gap: 6px;
+      gap: 4px;
     }
     .chat-msg.me {
       justify-content: flex-end;
@@ -195,7 +222,7 @@
     .chat-msg .sender {
       font-weight: bold;
       color: #2196f3;
-      font-size: 1.05em;
+      font-size: 1.01em;
       margin-right: 2px;
     }
     .chat-msg.me .sender {
@@ -203,9 +230,9 @@
     }
     .chat-msg .msg {
       background: #fff;
-      border-radius: 12px;
-      padding: 4px 10px;
-      max-width: 180px;
+      border-radius: 10px;
+      padding: 3px 8px;
+      max-width: 140px;
       word-break: break-word;
       box-shadow: 0 1px 3px rgba(33,150,243,0.05);
     }
@@ -214,15 +241,15 @@
     }
     .chat-input-row {
       display: flex;
-      gap: 4px;
+      gap: 3px;
       align-items: center;
     }
     .chat-input {
       flex: 1;
-      border-radius: 10px;
+      border-radius: 8px;
       border: 1px solid #90caf9;
-      padding: 5px 8px;
-      font-size: 1.05rem;
+      padding: 4px 7px;
+      font-size: 1.01rem;
       font-family: inherit;
       outline: none;
     }
@@ -230,9 +257,9 @@
       background: #2196f3;
       color: #fff;
       border: none;
-      border-radius: 10px;
-      padding: 5px 14px;
-      font-size: 1.1rem;
+      border-radius: 8px;
+      padding: 4px 10px;
+      font-size: 1.05rem;
       font-family: inherit;
       cursor: pointer;
       transition: background 0.2s;
@@ -243,23 +270,39 @@
     }
     .emoji-bar {
       display: flex;
-      gap: 6px;
-      margin-bottom: 4px;
-      margin-top: 2px;
+      gap: 4px;
+      margin-bottom: 2px;
+      margin-top: 1px;
       flex-wrap: wrap;
     }
     .emoji-btn {
       background: none;
       border: none;
-      font-size: 1.2rem;
+      font-size: 1.1rem;
       cursor: pointer;
       transition: transform 0.1s;
       border-radius: 6px;
-      padding: 2px 4px;
+      padding: 1px 3px;
     }
-    .emoji-btn:hover {
+    .emoji-btn:hover, .emoji-btn:focus {
       background: #bbdefb;
       transform: scale(1.2);
+    }
+    @media (max-width: 500px) {
+      .container {
+        min-width: 98vw;
+        max-width: 100vw;
+        border-radius: 0;
+        padding: 10px 2vw 10px 2vw;
+      }
+      .board {
+        min-width: 180px;
+        min-height: 180px;
+        max-width: 98vw;
+      }
+      .chat-container {
+        max-width: 98vw;
+      }
     }
   </style>
   <!-- Firebase -->
@@ -363,7 +406,7 @@
     ];
     const ROOM_ID = "default-room";
     function generatePlayerId() {
-      return 'player-' + Math.random().toString(36).substr(2, 9);
+      return 'player-' + Math.random().toString(36).substr(2, 9) + '-' + Date.now();
     }
     let playerId = generatePlayerId();
     let playerShape = null;
@@ -371,7 +414,6 @@
     let unsubscribe = null;
     let playerRef = null;
     let selectedShape = null;
-    let myRole = null; // "player1" or "player2"
 
     // --- Music ---
     bgMusic.volume = 1.0;
@@ -388,13 +430,12 @@
         const players = snap.val() || {};
         const connected = Object.values(players).filter(p => p && p.connected);
         if (connected.length === 0) {
-          // Reset the room: clear board, chat, shapes, turn, winner, but keep the room node
           db.ref('rooms/' + ROOM_ID).update({
             board: Array(9).fill(''),
             turn: null,
             winner: null,
             chat: null,
-            players: null // Remove all player nodes
+            players: null
           });
         }
       });
@@ -404,8 +445,13 @@
     function getPlayers(snapshot) {
       const players = snapshot.val() || {};
       return Object.entries(players)
+        .filter(([id, p]) => p && p.connected && p.shape)
+        .map(([id, p]) => ({ id, ...p }));
+    }
+    function getAllConnectedPlayers(snapshot) {
+      const players = snapshot.val() || {};
+      return Object.entries(players)
         .filter(([id, p]) => p && p.connected)
-        .sort((a, b) => a[1].joined - b[1].joined)
         .map(([id, p]) => ({ id, ...p }));
     }
 
@@ -439,51 +485,62 @@
 
       // Listen for player list changes
       db.ref('rooms/' + ROOM_ID + '/players').on('value', snap => {
-        const players = getPlayers(snap);
-        updatePlayerCount(players.length);
+        const allPlayers = getAllConnectedPlayers(snap);
+        updatePlayerCount(allPlayers.length);
 
-        // Only allow first two players
-        const myIndex = players.findIndex(p => p.id === playerId);
-        if (myIndex === -1 || players.length > 2) {
+        // Only allow first two players who have picked a shape
+        const activePlayers = getPlayers(snap);
+        const isActive = activePlayers.some(p => p.id === playerId);
+        const isWaiting = allPlayers.some(p => p.id === playerId);
+
+        if (!isWaiting || allPlayers.length > 2) {
           showError("Room is full! Only 2 players allowed.");
           pickShapesBox.classList.add('hide');
           gameBox.classList.add('hide');
           return;
         }
-        myRole = myIndex === 0 ? "player1" : "player2";
 
         // If already joined, update shape buttons for opponent's pick
-        updateShapeButtons(players);
+        updateShapeButtons(allPlayers);
 
         // Show shape picker if not picked yet
-        if (!players[myIndex].shape) {
+        if (!activePlayers.some(p => p.id === playerId)) {
           showPickShapes();
+          clearError();
+        } else if (activePlayers.length === 2) {
+          // Both shapes picked, start game
+          const [p1, p2] = activePlayers;
+          playerShape = p1.id === playerId ? p1.shape : p2.shape;
+          opponentShape = p1.id === playerId ? p2.shape : p1.shape;
+          showGame();
+          subscribeToGame();
+          db.ref(`rooms/${ROOM_ID}/players`).off();
           clearError();
         }
       });
     }
 
     // --- Shape selection ---
-    function updateShapeButtons(players) {
-      // Find opponent's shape
-      const myIndex = players.findIndex(p => p.id === playerId);
-      const otherIndex = myIndex === 0 ? 1 : 0;
-      let takenShape = players[otherIndex] && players[otherIndex].shape ? players[otherIndex].shape : null;
-
+    function updateShapeButtons(allPlayers) {
+      // Find shapes already picked
+      const pickedShapes = allPlayers.filter(p => p.shape).map(p => p.shape);
       Array.from(pickBtns.children).forEach(btn => {
         const shape = btn.getAttribute('data-shape');
-        btn.disabled = (takenShape === shape && !btn.classList.contains('selected'));
+        btn.disabled = pickedShapes.includes(shape) && selectedShape !== shape;
         btn.classList.toggle('selected', selectedShape === shape);
       });
-      pickGoBtn.disabled = !selectedShape || (takenShape === selectedShape);
+      pickGoBtn.disabled = !selectedShape || (pickedShapes.includes(selectedShape) && !allPlayers.some(p => p.id === playerId && p.shape === selectedShape));
     }
 
     pickBtns.addEventListener('click', function(e) {
       if (!e.target.classList.contains('pick-btn')) return;
       const shape = e.target.getAttribute('data-shape');
       selectedShape = shape;
-      // We'll update buttons after fetching opponent's shape
-      updateShapeButtons(getPlayersFromDOM());
+      updateShapeButtons(getAllConnectedPlayers({ val: () => { // fake snapshot for instant UI
+        const obj = {};
+        obj[playerId] = { connected: true, shape: selectedShape, joined: Date.now() };
+        return obj;
+      }}));
     });
 
     pickGoBtn.onclick = async () => {
@@ -492,29 +549,6 @@
       playerShape = selectedShape;
       pickGoBtn.disabled = true;
       showError("Waiting for opponent to pick...");
-      // Wait for opponent to pick
-      db.ref(`rooms/${ROOM_ID}/players`).on('value', snap => {
-        const players = getPlayers(snap);
-        updateShapeButtons(players);
-        const myIndex = players.findIndex(p => p.id === playerId);
-        const otherIndex = myIndex === 0 ? 1 : 0;
-        let otherPlayer = players[otherIndex];
-        if (otherPlayer && otherPlayer.shape) {
-          opponentShape = otherPlayer.shape;
-          // Set turn if not set
-          db.ref(`rooms/${ROOM_ID}/turn`).get().then(turnSnap => {
-            if (!turnSnap.exists()) {
-              // Randomly pick who starts
-              const first = Math.random() < 0.5 ? playerShape : opponentShape;
-              db.ref(`rooms/${ROOM_ID}/turn`).set(first);
-            }
-          });
-          showGame();
-          subscribeToGame();
-          db.ref(`rooms/${ROOM_ID}/players`).off();
-          clearError();
-        }
-      });
     };
 
     function showPickShapes() {
@@ -530,17 +564,6 @@
     function showGame() {
       pickShapesBox.classList.add('hide');
       gameBox.classList.remove('hide');
-    }
-
-    // Helper to get players from DOM (for local update)
-    function getPlayersFromDOM() {
-      // This is a fallback for local updates before Firebase updates
-      // Only used for instant UI feedback
-      let players = [];
-      if (playerId && selectedShape) {
-        players.push({ id: playerId, shape: selectedShape, connected: true, joined: Date.now() });
-      }
-      return players;
     }
 
     // --- Game logic ---
@@ -561,7 +584,7 @@
         if (shapeObj) cellClass += ' ' + shapeObj.class;
         cell.className = cellClass;
         cell.dataset.index = i;
-        cell.innerHTML = shapeObj ? shapeObj.icon : '';
+        cell.innerHTML = `<span class="cell-inner">${shapeObj ? shapeObj.icon : ''}</span>`;
         if (!winner && turn === playerShape && !board[i]) {
           cell.addEventListener('click', () => makeMove(i, board, playersObj));
         }
@@ -591,8 +614,7 @@
       const winner = checkWinner(board);
       // Find opponent's shape
       const players = Object.entries(playersObj || {})
-        .filter(([id, p]) => p && p.connected)
-        .sort((a, b) => a[1].joined - b[1].joined)
+        .filter(([id, p]) => p && p.connected && p.shape)
         .map(([id, p]) => ({ id, ...p }));
       const myIndex = players.findIndex(p => p.id === playerId);
       const otherIndex = myIndex === 0 ? 1 : 0;
