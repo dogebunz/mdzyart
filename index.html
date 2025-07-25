@@ -205,12 +205,9 @@
   <div class="cute-app-title text-center my-3">mdzy art place</div>
 
   <!-- Welcome Modal -->
-  <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
+  <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="border-radius: 24px;">
-        <div class="modal-header border-0">
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
         <div class="modal-body text-center py-5">
           <h1 class="cute-title mb-4">Let's draw!</h1>
           <div class="arrow mb-4">
@@ -284,6 +281,7 @@
     // === Modal logic ===
     const welcomeModalEl = document.getElementById('welcomeModal');
     const welcomeModal = new bootstrap.Modal(welcomeModalEl);
+    welcomeModal.show();
     let joined = false;
     let currentRoom = 'default';
     let userName = '';
@@ -303,7 +301,8 @@
       userName = name;
       joined = true;
       welcomeModal.hide();
-      socket.emit('joinRoom', currentRoom);
+      // Send name to backend when joining
+      socket.emit('joinRoom', { room: currentRoom, name: userName });
     };
 
     document.getElementById('leave-btn').onclick = () => {
@@ -311,14 +310,6 @@
       welcomeModal.show();
       socket.emit('leaveRoom', currentRoom);
     };
-
-    // Optionally, auto-join if modal is closed by close button or outside click
-    welcomeModalEl.addEventListener('hidden.bs.modal', () => {
-      if (!joined) {
-        // You can auto-join here if you want, or do nothing
-        // socket.emit('joinRoom', currentRoom);
-      }
-    });
 
     // === Music ===
     const music = document.getElementById('bg-music');
