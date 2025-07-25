@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplayer Tic-Tac-Toe (Default Room)</title>
+  <title>Multiplayer Tic-Tac-Toe (with Chat!)</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     body {
@@ -87,10 +87,16 @@
       letter-spacing: 1px;
     }
     .player-count {
-      margin-bottom: 12px;
+      margin-bottom: 6px;
       color: #1976d2;
       font-size: 1.1rem;
       text-align: center;
+    }
+    #roomIdDisplay {
+      color:#1976d2;
+      font-size:1.1rem;
+      text-align:center;
+      margin-bottom:10px;
     }
     .pick-btns {
       display: flex;
@@ -155,6 +161,106 @@
       margin-bottom: 10px;
       text-align: center;
     }
+    /* Chat styles */
+    .chat-container {
+      width: 100%;
+      max-width: 340px;
+      background: #e3f2fd;
+      border-radius: 18px;
+      margin-top: 10px;
+      padding: 10px 10px 6px 10px;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+    }
+    .chat-messages {
+      min-height: 60px;
+      max-height: 120px;
+      overflow-y: auto;
+      margin-bottom: 6px;
+      font-size: 1.08rem;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .chat-msg {
+      display: flex;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .chat-msg.me {
+      justify-content: flex-end;
+    }
+    .chat-msg .sender {
+      font-weight: bold;
+      color: #2196f3;
+      font-size: 1.05em;
+      margin-right: 2px;
+    }
+    .chat-msg.me .sender {
+      color: #ff80ab;
+    }
+    .chat-msg .msg {
+      background: #fff;
+      border-radius: 12px;
+      padding: 4px 10px;
+      max-width: 180px;
+      word-break: break-word;
+      box-shadow: 0 1px 3px rgba(33,150,243,0.05);
+    }
+    .chat-msg.me .msg {
+      background: #bbdefb;
+    }
+    .chat-input-row {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+    .chat-input {
+      flex: 1;
+      border-radius: 10px;
+      border: 1px solid #90caf9;
+      padding: 5px 8px;
+      font-size: 1.05rem;
+      font-family: inherit;
+      outline: none;
+    }
+    .chat-send-btn {
+      background: #2196f3;
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 5px 14px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .chat-send-btn:disabled {
+      background: #90caf9;
+      cursor: not-allowed;
+    }
+    .emoji-bar {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 4px;
+      margin-top: 2px;
+      flex-wrap: wrap;
+    }
+    .emoji-btn {
+      background: none;
+      border: none;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: transform 0.1s;
+      border-radius: 6px;
+      padding: 2px 4px;
+    }
+    .emoji-btn:hover {
+      background: #bbdefb;
+      transform: scale(1.2);
+    }
   </style>
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -164,6 +270,7 @@
   <div class="container">
     <h1>🐾 Multiplayer Tic-Tac-Toe</h1>
     <div class="player-count" id="playerCount"></div>
+    <div id="roomIdDisplay"></div>
     <div id="errorMsg" class="error-msg"></div>
     <div id="pickShapesBox" class="hide">
       <div style="color:#2196f3;font-size:1.1rem;margin-bottom:8px;">Pick your shape:</div>
@@ -179,6 +286,28 @@
     <div id="gameBox" class="hide">
       <div id="status">Player <span id="current-player">X</span>'s turn</div>
       <div class="board" id="board"></div>
+      <!-- Chat UI -->
+      <div class="chat-container" id="chatContainer">
+        <div class="emoji-bar" id="emojiBar">
+          <button class="emoji-btn">😀</button>
+          <button class="emoji-btn">😂</button>
+          <button class="emoji-btn">😍</button>
+          <button class="emoji-btn">😎</button>
+          <button class="emoji-btn">👍</button>
+          <button class="emoji-btn">🎉</button>
+          <button class="emoji-btn">😺</button>
+          <button class="emoji-btn">❌</button>
+          <button class="emoji-btn">⭕</button>
+          <button class="emoji-btn">⭐</button>
+          <button class="emoji-btn">⬣</button>
+          <button class="emoji-btn">▲</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" maxlength="120" placeholder="Type a message or emoji...">
+          <button class="chat-send-btn" id="chatSendBtn" disabled>Send</button>
+        </div>
+      </div>
       <button class="start-go-btn" id="leaveBtn" style="margin-top:10px;">Leave Room</button>
     </div>
     <div class="footer">Made with 💙 for you!</div>
@@ -203,6 +332,7 @@
 
     // --- UI elements ---
     const playerCountEl = document.getElementById('playerCount');
+    const roomIdDisplay = document.getElementById('roomIdDisplay');
     const errorMsgEl = document.getElementById('errorMsg');
     const pickShapesBox = document.getElementById('pickShapesBox');
     const pickBtns = document.getElementById('pickBtns');
@@ -216,6 +346,12 @@
     const winSound = document.getElementById('winSound');
     const drawSound = document.getElementById('drawSound');
     const bgMusic = document.getElementById('bgMusic');
+    // Chat
+    const chatContainer = document.getElementById('chatContainer');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    const emojiBar = document.getElementById('emojiBar');
 
     // --- Game state ---
     const shapes = [
@@ -231,10 +367,17 @@
     let opponentShape = null;
     let unsubscribe = null;
     let playerRef = null;
+    let selectedShape = null;
+    let playerName = "";
 
     // --- Music ---
     bgMusic.volume = 1.0;
     document.body.addEventListener('mousedown', () => { bgMusic.play().catch(()=>{}); }, { once: true });
+
+    // --- Room ID display ---
+    function updateRoomIdDisplay() {
+      roomIdDisplay.textContent = `Room ID: ${ROOM_ID}`;
+    }
 
     // --- Player connection logic ---
     function getPlayers(snapshot) {
@@ -246,6 +389,7 @@
 
     function updatePlayerCount(count) {
       playerCountEl.textContent = `Players connected: ${count}/2`;
+      updateRoomIdDisplay();
     }
 
     function showError(msg) {
@@ -266,13 +410,16 @@
         winner: null
       });
 
-      // Listen for player count
+      // Listen for player count and shape selection in real time
       db.ref('rooms/' + ROOM_ID + '/players').on('value', snap => {
         const players = getPlayers(snap);
         updatePlayerCount(players.length);
 
-        // If already joined, do nothing
-        if (playerId) return;
+        // If already joined, update shape buttons for opponent's pick
+        if (playerId) {
+          updateShapeButtons(players);
+          return;
+        }
 
         // If room is full, show error
         if (players.length >= 2) {
@@ -297,18 +444,30 @@
     }
 
     // --- Shape selection ---
-    let selectedShape = null;
+    function updateShapeButtons(players) {
+      // Find opponent's shape
+      let other = playerId === 'player1' ? 'player2' : 'player1';
+      let otherPlayer = players.find(p => p.id === other);
+      let takenShape = otherPlayer && otherPlayer.shape ? otherPlayer.shape : null;
+
+      Array.from(pickBtns.children).forEach(btn => {
+        const shape = btn.getAttribute('data-shape');
+        btn.disabled = (takenShape === shape && !btn.classList.contains('selected'));
+        btn.classList.toggle('selected', selectedShape === shape);
+      });
+      pickGoBtn.disabled = !selectedShape || (takenShape === selectedShape);
+    }
+
     pickBtns.addEventListener('click', function(e) {
       if (!e.target.classList.contains('pick-btn')) return;
       const shape = e.target.getAttribute('data-shape');
-      Array.from(pickBtns.children).forEach(btn => btn.classList.remove('selected'));
-      e.target.classList.add('selected');
       selectedShape = shape;
-      pickGoBtn.disabled = false;
+      // We'll update buttons after fetching opponent's shape
+      updateShapeButtons(getPlayersFromDOM());
     });
+
     pickGoBtn.onclick = async () => {
       if (!selectedShape) return;
-      // Save shape to Firebase
       await playerRef.update({ shape: selectedShape });
       playerShape = selectedShape;
       pickGoBtn.disabled = true;
@@ -316,6 +475,7 @@
       // Wait for opponent to pick
       db.ref(`rooms/${ROOM_ID}/players`).on('value', snap => {
         const players = getPlayers(snap);
+        updateShapeButtons(players);
         let other = playerId === 'player1' ? 'player2' : 'player1';
         let otherPlayer = players.find(p => p.id === other);
         if (otherPlayer && otherPlayer.shape) {
@@ -344,10 +504,22 @@
         btn.disabled = false;
       });
       pickGoBtn.disabled = true;
+      selectedShape = null;
     }
     function showGame() {
       pickShapesBox.classList.add('hide');
       gameBox.classList.remove('hide');
+    }
+
+    // Helper to get players from DOM (for local update)
+    function getPlayersFromDOM() {
+      // This is a fallback for local updates before Firebase updates
+      // Only used for instant UI feedback
+      let players = [];
+      if (playerId && selectedShape) {
+        players.push({ id: playerId, shape: selectedShape, connected: true });
+      }
+      return players;
     }
 
     // --- Game logic ---
@@ -357,6 +529,7 @@
         if (!data) return;
         renderBoard(data.board, data.turn, data.winner);
       });
+      subscribeToChat();
     }
     function renderBoard(board, turn, winner) {
       boardEl.innerHTML = '';
@@ -428,6 +601,8 @@
       opponentShape = null;
       unsubscribe && db.ref('rooms/' + ROOM_ID).off();
       showPickShapes();
+      // Clear chat
+      chatMessages.innerHTML = "";
     };
 
     // --- Sound helpers ---
@@ -435,8 +610,55 @@
     function playWinSound() { winSound.currentTime = 0; winSound.play().catch(()=>{}); }
     function playDrawSound() { drawSound.currentTime = 0; drawSound.play().catch(()=>{}); }
 
+    // --- Chat logic ---
+    function subscribeToChat() {
+      db.ref(`rooms/${ROOM_ID}/chat`).off();
+      db.ref(`rooms/${ROOM_ID}/chat`).limitToLast(30).on('value', snap => {
+        const msgs = snap.val() || {};
+        chatMessages.innerHTML = "";
+        Object.values(msgs).forEach(msg => {
+          const div = document.createElement('div');
+          div.className = "chat-msg" + (msg.senderId === playerId ? " me" : "");
+          div.innerHTML = `<span class="sender">${msg.senderName || msg.senderId}:</span> <span class="msg">${msg.text}</span>`;
+          chatMessages.appendChild(div);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+      });
+    }
+    function sendChatMessage(text) {
+      if (!text.trim()) return;
+      const msg = {
+        senderId: playerId,
+        senderName: playerShape || playerId,
+        text: text.trim(),
+        ts: Date.now()
+      };
+      db.ref(`rooms/${ROOM_ID}/chat`).push(msg);
+    }
+    chatInput.addEventListener('input', () => {
+      chatSendBtn.disabled = !chatInput.value.trim();
+    });
+    chatInput.addEventListener('keydown', e => {
+      if (e.key === "Enter" && !chatSendBtn.disabled) {
+        chatSendBtn.click();
+      }
+    });
+    chatSendBtn.onclick = () => {
+      sendChatMessage(chatInput.value);
+      chatInput.value = "";
+      chatSendBtn.disabled = true;
+    };
+    emojiBar.addEventListener('click', e => {
+      if (e.target.classList.contains('emoji-btn')) {
+        chatInput.value += e.target.textContent;
+        chatInput.focus();
+        chatSendBtn.disabled = !chatInput.value.trim();
+      }
+    });
+
     // --- Init ---
     joinRoom();
+    updateRoomIdDisplay();
   </script>
 </body>
 </html>
