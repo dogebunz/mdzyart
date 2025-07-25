@@ -27,8 +27,9 @@ const io = new Server(server, {
   }
 });
 
-// --- Store usernames by socket.id ---
+// --- Store usernames and canvas history by room ---
 const userNames = {};
+const canvasHistory = {}; // { roomName: [ {from, to, color, size, isEraser}, ... ] }
 
 io.on('connection', (socket) => {
   socket.currentRoom = null;
@@ -40,6 +41,10 @@ io.on('connection', (socket) => {
     userNames[socket.id] = name || 'Anonymous';
     socket.join(room);
     io.to(room).emit('system', `<b>${userNames[socket.id]}</b> joined`);
+    // Send the canvas history to the new user
+    if (canvasHistory[room]) {
+      socket.emit('canvasHistory', canvasHistory[room]);
+    }
   });
 
   // --- Leave Room ---
@@ -58,11 +63,14 @@ io.on('connection', (socket) => {
 
   // --- Drawing ---
   socket.on('draw', ({ room, data }) => {
+    if (!canvasHistory[room]) canvasHistory[room] = [];
+    canvasHistory[room].push(data);
     socket.to(room).emit('draw', data);
   });
 
   // --- Clear Canvas ---
   socket.on('clear', ({ room }) => {
+    canvasHistory[room] = [];
     socket.to(room).emit('clear');
   });
 
