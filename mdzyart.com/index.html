@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>mdzyart</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <!-- Emoji Button -->
+  <script src="https://cdn.jsdelivr.net/npm/emoji-button@4.6.4/dist/index.min.js"></script>
+  <style>
+    body {
+      background: #1976d2;
+      min-height: 100vh;
+      color: #fff;
+    }
+    #mdzyart-title {
+      font-size: 2.5rem;
+      font-weight: bold;
+      margin: 30px 0 20px 0;
+      text-align: center;
+      letter-spacing: 2px;
+    }
+    #canvas {
+      background: #fff;
+      border-radius: 10px;
+      touch-action: none;
+      width: 100%;
+      max-width: 600px;
+      height: 300px;
+      display: block;
+      margin: 0 auto 20px auto;
+      border: 2px solid #1565c0;
+    }
+    #chat-box {
+      background: #e3f2fd;
+      color: #222;
+      border-radius: 10px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      margin-bottom: 10px;
+    }
+    #room-form, #chat-form {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    #emoji-btn {
+      background: #fff;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) {
+      #canvas { height: 200px; }
+      #mdzyart-title { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="mdzyart-title">mdzyart</div>
+    <form id="room-form" class="mb-3">
+      <input type="text" id="room-input" class="form-control" placeholder="Room name" required style="max-width: 200px;">
+      <button type="submit" class="btn btn-light">Join</button>
+      <button type="button" id="leave-btn" class="btn btn-danger" disabled>Leave</button>
+    </form>
+    <canvas id="canvas" width="600" height="300"></canvas>
+    <div id="chat-box"></div>
+    <form id="chat-form" autocomplete="off">
+      <input type="text" id="chat-input" class="form-control" placeholder="Type a message..." style="max-width: 300px;">
+      <button type="button" id="emoji-btn">&#128515;</button>
+      <button type="submit" class="btn btn-light">Send</button>
+    </form>
+  </div>
+
+  <!-- Socket.IO -->
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script>
+    // === CONFIG ===
+    // Change this to your backend URL!
+    const SERVER_URL = 'https://YOUR-BACKEND-URL-HERE'; // e.g. https://mdzyart-backend.glitch.me
+
+    // === SOCKET.IO ===
+    const socket = io(SERVER_URL);
+
+    let currentRoom = null;
+
+    // === ROOM JOIN/LEAVE ===
+    const roomForm = document.getElementById('room-form');
+    const roomInput = document.getElementById('room-input');
+    const leaveBtn = document.getElementById('leave-btn');
+
+    roomForm.onsubmit = e => {
+      e.preventDefault();
+      const room = roomInput.value.trim();
+      if (!room) return;
+      socket.emit('joinRoom', room);
+      currentRoom = room;
+      leaveBtn.disabled = false;
+      roomInput.disabled = true;
+    };
+
+    leaveBtn.onclick = () => {
+      if (currentRoom) {
+        socket.emit('leaveRoom', currentRoom);
+        currentRoom = null;
+        leaveBtn.disabled = true;
+        roomInput.disabled = false;
+      }
+    };
+
+    // === CHAT ===
+    const chatBox = document.getElementById('chat-box');
+    const chatForm = document.getElementById('chat-form');
+    const chatInput = document.getElementById('chat-input');
+
+    function addMessage(msg, system = false) {
+      const div = document.createElement('div');
+      div.innerHTML = msg;
+      if (system) div.style.fontStyle = 'italic';
+      chatBox.appendChild(div);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    socket.on('chat', ({ id, message }) => {
+      addMessage(`<b>${id}:</b> ${message}`);
+    });
+    socket.on('system', msg => addMessage(`<span style="color:#1976d2">${msg}</span>`, true));
+
+    chatForm.onsubmit = e => {
+      e.preventDefault();
+      if (!currentRoom) return;
+      const msg = chatInput.value.trim();
+      if (!msg) return;
+      socket.emit('chat', { room: currentRoom, message: msg });
+      chatInput.value = '';
+    };
+
+    // === EMOJI PICKER ===
+    const emojiBtn = document.getElementById('emoji-btn');
+    const picker = new EmojiButton({ theme: 'light' });
+    emojiBtn.addEventListener('click', () => picker.togglePicker(emojiBtn));
+    picker.on('emoji', emoji => {
+      chatInput.value += emoji;
+      chatInput.focus();
+    });
+
+    // === CANVAS DRAWING ===
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    let drawing = false, last = null;
+
+    function getPos(e) {
+      if (e.touches) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (e.touches[0].clientX - rect.left) * (canvas.width / rect.width),
+          y: (e.touches[0].clientY - rect.top) * (canvas.height / rect.height)
+        };
+      } else {
+        return {
+          x: e.offsetX,
+          y: e.offsetY
+        };
+      }
+    }
+
+    function drawLine(from, to, color = '#1976d2', emit = true) {
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(from.x, from.y);
+      ctx.lineTo(to.x, to.y);
+      ctx.stroke();
+      ctx.closePath();
+      if (emit && currentRoom) {
+        socket.emit('draw', { room: currentRoom, data: { from, to, color } });
+      }
+    }
+
+    function startDraw(e) {
+      if (!currentRoom) return;
+      drawing = true;
+      last = getPos(e);
+    }
+    function moveDraw(e) {
+      if (!drawing || !currentRoom) return;
+      const pos = getPos(e);
+      drawLine(last, pos);
+      last = pos;
+    }
+    function endDraw() {
+      drawing = false;
+      last = null;
+    }
+
+    // Mouse events
+    canvas.addEventListener('mousedown', startDraw);
+    canvas.addEventListener('mousemove', moveDraw);
+    canvas.addEventListener('mouseup', endDraw);
+    canvas.addEventListener('mouseleave', endDraw);
+    // Touch events
+    canvas.addEventListener('touchstart', startDraw);
+    canvas.addEventListener('touchmove', moveDraw);
+    canvas.addEventListener('touchend', endDraw);
+
+    // Receive drawing from others
+    socket.on('draw', data => {
+      drawLine(data.from, data.to, data.color, false);
+    });
+
+    // === CLEAR CANVAS ON ROOM CHANGE ===
+    socket.on('system', msg => {
+      if (msg.includes('joined')) {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    });
+  </script>
+</body>
+</html>
