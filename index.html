@@ -9,7 +9,8 @@
   <!-- Pinch Zoom -->
   <script src="https://cdn.jsdelivr.net/npm/pinch-zoom-js@2.3.4/dist/pinch-zoom.umd.min.js"></script>
   <!-- Cute Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&family=Pacifico&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&display=swap" rel="stylesheet">
+
   <style>
     body {
       background: linear-gradient(135deg, #e3f0ff 0%, #b3e0ff 100%);
@@ -18,7 +19,7 @@
       min-height: 100vh;
     }
     .cute-app-title {
-      font-family: 'Fredoka One', cursive;
+      font-family: 'Baloo 2', cursive, sans-serif;
       font-size: 2.5rem;
       color: #1976d2;
       letter-spacing: 2px;
@@ -27,6 +28,9 @@
       margin-bottom: 12px;
       user-select: none;
       pointer-events: none;
+    }
+    @media (max-width: 600px) {
+      .cute-app-title { font-size: 1.5rem; }
     }
     .cute-title {
       font-size: 3rem;
@@ -174,7 +178,7 @@
 </head>
 <body>
   <!-- Cute App Title -->
-  <div class="cute-app-title text-center my-3">mdzy art place</div>
+ <div class="cute-app-title text-center my-3">mdzy art place</div>
 
   <!-- Welcome Modal -->
   <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
