@@ -195,8 +195,8 @@ pinch-zoom {
 }
 
 
-    function drawLine(from, to, color = '#1976d2', emit = true) {
-      ctx.strokeStyle = color;
+    function drawLine(from, to, color = currentColor, emit = true) {
+  ctx.strokeStyle = color;
       ctx.lineWidth = 3;
       ctx.lineCap = 'round';
       ctx.beginPath();
@@ -205,9 +205,9 @@ pinch-zoom {
       ctx.stroke();
       ctx.closePath();
       if (emit && currentRoom) {
-        socket.emit('draw', { room: currentRoom, data: { from, to, color } });
-      }
-    }
+    socket.emit('draw', { room: currentRoom, data: { from, to, color } });
+  }
+}
 
     function startDraw(e) {
       if (!currentRoom) return;
@@ -244,6 +244,16 @@ pinch-zoom {
     socket.on('draw', data => {
       drawLine(data.from, data.to, data.color, false);
     });
+
+    let currentColor = '#1976d2';
+document.querySelectorAll('.color-btn').forEach(btn => {
+  btn.onclick = () => {
+    currentColor = btn.getAttribute('data-color');
+  };
+});
+document.getElementById('custom-color').oninput = (e) => {
+  currentColor = e.target.value;
+};
 
     // === CLEAR CANVAS ===
     const clearBtn = document.getElementById('clear-btn');
