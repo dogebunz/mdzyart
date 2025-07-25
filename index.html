@@ -142,24 +142,24 @@
     let drawing = false, last = null;
 
     function getPos(e) {
-      const rect = canvas.getBoundingClientRect();
-      if (e.touches && e.touches.length > 0) {
-        return {
-          x: (e.touches[0].clientX - rect.left) * (canvas.width / rect.width),
-          y: (e.touches[0].clientY - rect.top) * (canvas.height / rect.height)
-        };
-      } else if (e.changedTouches && e.changedTouches.length > 0) {
-        return {
-          x: (e.changedTouches[0].clientX - rect.left) * (canvas.width / rect.width),
-          y: (e.changedTouches[0].clientY - rect.top) * (canvas.height / rect.height)
-        };
-      } else {
-        return {
-          x: e.offsetX,
-          y: e.offsetY
-        };
-      }
-    }
+  const rect = canvas.getBoundingClientRect();
+  let clientX, clientY;
+  if (e.touches && e.touches.length > 0) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else if (e.changedTouches && e.changedTouches.length > 0) {
+    clientX = e.changedTouches[0].clientX;
+    clientY = e.changedTouches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  return {
+    x: (clientX - rect.left) * (canvas.width / rect.width),
+    y: (clientY - rect.top) * (canvas.height / rect.height)
+  };
+}
+
 
     function drawLine(from, to, color = '#1976d2', emit = true) {
       ctx.strokeStyle = color;
