@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplayer Tic-Tac-Toe (Sequential Shape Pick)</title>
+  <title>Multiplayer Tic-Tac-Toe (Robust, Sequential, No CSS)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
@@ -245,7 +245,7 @@
     <div class="player-count" id="playerCount"></div>
     <div id="roomIdDisplay"></div>
     <div id="errorMsg" class="error-msg"></div>
-    <div id="pickShapesBox" style="display:none;">
+    <div id="pickShapesBox" class="hide">
       <div id="pickMsg"></div>
       <div class="pick-btns" id="pickBtns">
         <button class="pick-btn x" data-shape="X" title="X">✖️</button>
@@ -256,9 +256,31 @@
       </div>
       <button class="start-go-btn" id="pickGoBtn" disabled>Confirm</button>
     </div>
-    <div id="gameBox" style="display:none;">
+    <div id="gameBox" class="hide">
       <div id="status">Player <span id="current-player">X</span>'s turn</div>
       <div class="board" id="board"></div>
+      <!-- Chat UI -->
+      <div class="chat-container" id="chatContainer">
+        <div class="emoji-bar" id="emojiBar">
+          <button class="emoji-btn">😀</button>
+          <button class="emoji-btn">😂</button>
+          <button class="emoji-btn">😍</button>
+          <button class="emoji-btn">😎</button>
+          <button class="emoji-btn">👍</button>
+          <button class="emoji-btn">🎉</button>
+          <button class="emoji-btn">😺</button>
+          <button class="emoji-btn">❌</button>
+          <button class="emoji-btn">⭕</button>
+          <button class="emoji-btn">⭐</button>
+          <button class="emoji-btn">⬣</button>
+          <button class="emoji-btn">▲</button>
+        </div>
+        <div class="chat-messages" id="chatMessages"></div>
+        <div class="chat-input-row">
+          <input class="chat-input" id="chatInput" maxlength="120" placeholder="Type a message or emoji...">
+          <button class="chat-send-btn" id="chatSendBtn" disabled>Send</button>
+        </div>
+      </div>
       <button class="start-go-btn" id="leaveBtn" style="margin-top:10px;">Leave Room</button>
     </div>
     <div class="footer">Made with 💙 for you!</div>
@@ -298,6 +320,11 @@
     const winSound = document.getElementById('winSound');
     const drawSound = document.getElementById('drawSound');
     const bgMusic = document.getElementById('bgMusic');
+    // Chat
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const chatSendBtn = document.getElementById('chatSendBtn');
+    const emojiBar = document.getElementById('emojiBar');
 
     // --- Game state ---
     const shapes = [
@@ -400,31 +427,36 @@
         const myIndex = allPlayers.findIndex(p => p.id === playerId);
         playerNum = myIndex === 0 ? 1 : 2;
 
+        // Only block if there are already 2 active players (who picked a shape)
         if (activePlayers.length >= 2 && !activePlayers.some(p => p.id === playerId)) {
           showError("Room is full! Only 2 players allowed.");
-          pickShapesBox.style.display = "none";
-          gameBox.style.display = "none";
+          pickShapesBox.classList.add('hide');
+          gameBox.classList.add('hide');
           return;
         }
 
         // --- Sequential shape picking logic ---
         if (playerNum === 1) {
+          // Player 1: can pick if not picked yet
           if (!allPlayers[0].shape) {
             showPickShapes("You are Player 1. Pick your shape!");
             updateShapeButtons([]);
           } else if (!activePlayers.some(p => p.id === playerId)) {
+            // Picked, but not confirmed yet
             showPickShapes("Waiting for Player 2 to join...");
             updateShapeButtons([allPlayers[0]]);
             pickBtns.style.pointerEvents = "none";
             pickGoBtn.disabled = true;
           }
         } else if (playerNum === 2) {
+          // Player 2: wait for Player 1 to pick
           if (!allPlayers[0].shape) {
             showPickShapes("Waiting for Player 1 to pick a shape...");
             updateShapeButtons([]);
             pickBtns.style.pointerEvents = "none";
             pickGoBtn.disabled = true;
           } else if (!allPlayers[1].shape) {
+            // Now Player 2 can pick, but only from remaining shapes
             showPickShapes("You are Player 2. Pick your shape!");
             updateShapeButtons([allPlayers[0]]);
             pickBtns.style.pointerEvents = "";
@@ -439,7 +471,7 @@
 
           // Set initial turn if not set
           db.ref('rooms/' + ROOM_ID + '/turn').get().then(turnSnap => {
-            if (!turnSnap.exists() || !turnSnap.val()) {
+            if (!turnSnap.exists()) {
               const first = Math.random() < 0.5 ? p1.shape : p2.shape;
               db.ref('rooms/' + ROOM_ID + '/turn').set(first);
             }
@@ -453,6 +485,7 @@
       });
     }
 
+    // --- Shape selection ---
     function updateShapeButtons(lockedPlayers) {
       const pickedShapes = lockedPlayers.filter(p => p.shape).map(p => p.shape);
       Array.from(pickBtns.children).forEach(btn => {
@@ -480,8 +513,8 @@
     };
 
     function showPickShapes(msg) {
-      pickShapesBox.style.display = "";
-      gameBox.style.display = "none";
+      pickShapesBox.classList.remove('hide');
+      gameBox.classList.add('hide');
       pickMsg.textContent = msg;
       Array.from(pickBtns.children).forEach(btn => {
         btn.classList.remove('selected');
@@ -491,8 +524,8 @@
       selectedShape = null;
     }
     function showGame() {
-      pickShapesBox.style.display = "none";
-      gameBox.style.display = "";
+      pickShapesBox.classList.add('hide');
+      gameBox.classList.remove('hide');
     }
 
     // --- Game logic ---
@@ -502,6 +535,7 @@
         if (!data) return;
         renderBoard(data.board, data.turn, data.winner, data.players);
       });
+      subscribeToChat();
     }
     function renderBoard(board, turn, winner, playersObj) {
       boardEl.innerHTML = '';
@@ -528,7 +562,7 @@
           playWinSound();
         }
       } else {
-        statusEl.innerHTML = `Player <span id="current-player">${turn || "?"}</span>'s turn`;
+        statusEl.innerHTML = `Player <span id="current-player">${turn}</span>'s turn`;
       }
     }
     async function makeMove(idx, board, playersObj) {
@@ -608,20 +642,20 @@
       };
       db.ref(`rooms/${ROOM_ID}/chat`).push(msg);
     }
-    chatInput && chatInput.addEventListener('input', () => {
+    chatInput.addEventListener('input', () => {
       chatSendBtn.disabled = !chatInput.value.trim();
     });
-    chatInput && chatInput.addEventListener('keydown', e => {
+    chatInput.addEventListener('keydown', e => {
       if (e.key === "Enter" && !chatSendBtn.disabled) {
         chatSendBtn.click();
       }
     });
-    chatSendBtn && (chatSendBtn.onclick = () => {
+    chatSendBtn.onclick = () => {
       sendChatMessage(chatInput.value);
       chatInput.value = "";
       chatSendBtn.disabled = true;
-    });
-    emojiBar && emojiBar.addEventListener('click', e => {
+    };
+    emojiBar.addEventListener('click', e => {
       if (e.target.classList.contains('emoji-btn')) {
         chatInput.value += e.target.textContent;
         chatInput.focus();
@@ -633,15 +667,6 @@
     autoResetRoomWhenEmpty();
     joinRoom();
     updateRoomIdDisplay();
-    // Subscribe to chat only after game starts
-    function subscribeToGame() {
-      unsubscribe = db.ref('rooms/' + ROOM_ID).on('value', snap => {
-        const data = snap.val();
-        if (!data) return;
-        renderBoard(data.board, data.turn, data.winner, data.players);
-      });
-      subscribeToChat();
-    }
   </script>
 </body>
 </html>
