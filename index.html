@@ -162,9 +162,12 @@
 </head>
 <body>
   <!-- Welcome Modal -->
-  <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+  <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content" style="border-radius: 24px;">
+        <div class="modal-header border-0">
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
         <div class="modal-body text-center py-5">
           <h1 class="cute-title mb-4">Let's draw!</h1>
           <div class="arrow mb-4">
@@ -225,24 +228,29 @@
     const socket = io(SERVER_URL);
 
     // === Modal logic ===
-    const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'), {
-      backdrop: 'static',
-      keyboard: false
-    });
-    welcomeModal.show();
-
-    const joinBtn = document.getElementById('join-btn');
-    const leaveBtn = document.getElementById('leave-btn');
+    const welcomeModalEl = document.getElementById('welcomeModal');
+    const welcomeModal = new bootstrap.Modal(welcomeModalEl);
+    let joined = false;
     let currentRoom = 'default';
 
-    joinBtn.onclick = () => {
+    document.getElementById('join-btn').onclick = () => {
+      joined = true;
       welcomeModal.hide();
       socket.emit('joinRoom', currentRoom);
     };
-    leaveBtn.onclick = () => {
+    document.getElementById('leave-btn').onclick = () => {
+      joined = false;
       welcomeModal.show();
       socket.emit('leaveRoom', currentRoom);
     };
+
+    // Optionally, auto-join if modal is closed by close button or outside click
+    welcomeModalEl.addEventListener('hidden.bs.modal', () => {
+      if (!joined) {
+        // You can auto-join here if you want, or do nothing
+        // socket.emit('joinRoom', currentRoom);
+      }
+    });
 
     // === Music ===
     const music = document.getElementById('bg-music');
@@ -262,7 +270,7 @@
       }
     };
     // Try to play after user joins
-    joinBtn.addEventListener('click', () => {
+    document.getElementById('join-btn').addEventListener('click', () => {
       setTimeout(() => {
         if (!musicOn) {
           music.play().catch(()=>{});
