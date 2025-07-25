@@ -52,10 +52,36 @@
       #canvas { height: 200px; }
       #mdzyart-title { font-size: 2rem; }
     }
+    #canvas-container {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto 20px auto;
+  border-radius: 10px;
+  overflow: hidden;
+}
+pinch-zoom {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+#canvas {
+  width: 100%;
+  height: 500px;
+  display: block;
+}
+@media (max-width: 900px) {
+  #canvas { height: 300px; }
+}
+@media (max-width: 600px) {
+  #canvas { height: 200px; }
+}
+
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/pinch-zoom-js@2.3.4/dist/pinch-zoom.umd.min.js"></script>
 </head>
 <body>
-  <div class="container">
+  <div id="canvas-container">
+  <pinch-zoom>
     <div id="mdzyart-title">mdzyart</div>
     <form id="room-form" class="mb-3">
       <input type="text" id="room-input" class="form-control" placeholder="Room name" required style="max-width: 200px;">
@@ -66,11 +92,19 @@
       <button id="clear-btn" class="btn btn-warning fw-bold">Clear Canvas</button>
     </div>
     <canvas id="canvas" width="900" height="500"></canvas>
+    <div class="d-flex justify-content-center mb-2 gap-2">
+  <button class="btn btn-primary color-btn" data-color="#1976d2" style="background:#1976d2;"></button>
+  <button class="btn btn-danger color-btn" data-color="#e53935" style="background:#e53935;"></button>
+  <button class="btn btn-success color-btn" data-color="#43a047" style="background:#43a047;"></button>
+  <button class="btn btn-warning color-btn" data-color="#fbc02d" style="background:#fbc02d;"></button>
+  <input type="color" id="custom-color" value="#1976d2" style="width:40px; height:40px; border:none;">
+</div>
     <div id="chat-box"></div>
     <form id="chat-form" autocomplete="off">
       <input type="text" id="chat-input" class="form-control" placeholder="Type a message..." style="max-width: 300px;">
       <button type="submit" class="btn btn-light">Send</button>
     </form>
+  </pinch-zoom>
   </div>
 
   <!-- Socket.IO -->
