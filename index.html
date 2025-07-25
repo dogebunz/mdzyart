@@ -161,17 +161,23 @@
   </style>
 </head>
 <body>
-  <!-- Start Page -->
-  <div id="start-page" class="d-flex flex-column align-items-center justify-content-center vh-100">
-    <h1 class="cute-title">Let's draw!</h1>
-    <div class="arrow mt-2 mb-4">
-      <svg width="40" height="40" viewBox="0 0 24 24"><path fill="#1976d2" d="M12 16.5l-8-8 1.41-1.42L12 13.67l6.59-6.59L20 8.5z"/></svg>
+  <!-- Welcome Modal -->
+  <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content" style="border-radius: 24px;">
+        <div class="modal-body text-center py-5">
+          <h1 class="cute-title mb-4">Let's draw!</h1>
+          <div class="arrow mb-4">
+            <svg width="40" height="40" viewBox="0 0 24 24"><path fill="#1976d2" d="M12 16.5l-8-8 1.41-1.42L12 13.67l6.59-6.59L20 8.5z"/></svg>
+          </div>
+          <button id="join-btn" class="btn btn-cute px-5 py-2">Join</button>
+        </div>
+      </div>
     </div>
-    <button id="join-btn" class="btn btn-cute px-5 py-2">Join</button>
   </div>
 
   <!-- Main App -->
-  <div id="main-app" style="display:none;">
+  <div id="main-app">
     <div id="main-card">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
@@ -206,6 +212,8 @@
   <!-- Background Music -->
   <audio id="bg-music" src="cute.mp3" loop></audio>
 
+  <!-- Bootstrap JS (for modal) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <!-- Socket.IO -->
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
@@ -216,21 +224,23 @@
     // === SOCKET.IO ===
     const socket = io(SERVER_URL);
 
-    // === Start/Join/Leave Logic ===
-    const startPage = document.getElementById('start-page');
-    const mainApp = document.getElementById('main-app');
+    // === Modal logic ===
+    const welcomeModal = new bootstrap.Modal(document.getElementById('welcomeModal'), {
+      backdrop: 'static',
+      keyboard: false
+    });
+    welcomeModal.show();
+
     const joinBtn = document.getElementById('join-btn');
     const leaveBtn = document.getElementById('leave-btn');
     let currentRoom = 'default';
 
     joinBtn.onclick = () => {
-      startPage.style.display = 'none';
-      mainApp.style.display = '';
+      welcomeModal.hide();
       socket.emit('joinRoom', currentRoom);
     };
     leaveBtn.onclick = () => {
-      mainApp.style.display = 'none';
-      startPage.style.display = '';
+      welcomeModal.show();
       socket.emit('leaveRoom', currentRoom);
     };
 
