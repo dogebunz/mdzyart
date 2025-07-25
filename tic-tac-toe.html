@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <title>Multiplayer Tic-Tac-Toe (Robust, Mobile)</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <!-- Your CSS goes here -->
-   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <!-- Add your CSS here -->
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
     <style>
         body {
             background: linear-gradient(135deg, #6ec6ff 0%, #2196f3 100%);
@@ -359,8 +359,8 @@
     function autoResetRoomWhenEmpty() {
       db.ref('rooms/' + ROOM_ID + '/players').on('value', snap => {
         const players = snap.val() || {};
-        const connected = Object.values(players).filter(p => p && p.connected);
-        if (connected.length === 0) {
+        const active = Object.values(players).filter(p => p && p.connected && p.shape);
+        if (active.length === 0) {
           db.ref('rooms/' + ROOM_ID).update({
             board: Array(9).fill(''),
             turn: null,
@@ -421,11 +421,8 @@
 
         updatePlayerCount(activePlayers.length);
 
-        // Only allow first two players who have picked a shape
-        const isActive = activePlayers.some(p => p.id === playerId);
-        const isWaiting = allPlayers.some(p => p.id === playerId);
-
-        if (!isWaiting || activePlayers.length > 2) {
+        // Only block if there are already 2 active players (who picked a shape)
+        if (activePlayers.length >= 2 && !activePlayers.some(p => p.id === playerId)) {
           showError("Room is full! Only 2 players allowed.");
           pickShapesBox.classList.add('hide');
           gameBox.classList.add('hide');
@@ -436,7 +433,7 @@
         updateShapeButtons(allPlayers);
 
         // Show shape picker if not picked yet
-        if (!isActive) {
+        if (!activePlayers.some(p => p.id === playerId)) {
           showPickShapes();
           clearError();
         } else if (activePlayers.length === 2) {
