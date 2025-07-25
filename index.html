@@ -130,6 +130,11 @@
       border: 2px solid #1976d2;
       background: #e3f0ff;
     }
+    #eraser-btn.selected {
+      background: #ffe082;
+      color: #b28704;
+      border: 2px solid #b28704;
+    }
     #brush-slider {
       accent-color: #1976d2;
       vertical-align: middle;
@@ -240,6 +245,7 @@
         <button class="color-btn" data-color="#fbc02d" style="background:#fbc02d;" title="Yellow"></button>
         <button class="color-btn" data-color="#8e24aa" style="background:#8e24aa;" title="Purple"></button>
         <input type="color" id="custom-color" value="#1976d2" title="Custom color">
+        <button id="eraser-btn" class="btn btn-light" title="Eraser">🧽</button>
         <button id="clear-btn" class="btn">Clear</button>
       </div>
       <div id="brush-row" class="mb-2 d-flex align-items-center justify-content-center gap-2">
@@ -338,24 +344,38 @@
       }
     };
 
-    // === Color Picker ===
+    // === Color Picker & Eraser ===
     let currentColor = '#1976d2';
+    let isEraser = false;
     function selectColor(color) {
       currentColor = color;
+      isEraser = false;
       document.querySelectorAll('.color-btn').forEach(btn => {
         btn.classList.toggle('selected', btn.getAttribute('data-color') === color);
       });
       document.getElementById('custom-color').value = color;
+      document.getElementById('eraser-btn').classList.remove('selected');
     }
     document.querySelectorAll('.color-btn').forEach(btn => {
       btn.onclick = () => selectColor(btn.getAttribute('data-color'));
     });
     document.getElementById('custom-color').oninput = (e) => {
       currentColor = e.target.value;
+      isEraser = false;
       document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+      document.getElementById('eraser-btn').classList.remove('selected');
     };
     // Set initial color
     selectColor('#1976d2');
+
+    // Eraser button
+    document.getElementById('eraser-btn').onclick = () => {
+      isEraser = !isEraser;
+      document.getElementById('eraser-btn').classList.toggle('selected', isEraser);
+      if (isEraser) {
+        document.querySelectorAll('.color-btn').forEach(btn => btn.classList.remove('selected'));
+      }
+    };
 
     // === Brush Size Picker ===
     let currentBrushSize = 3;
@@ -402,8 +422,8 @@
       };
     }
 
-    function drawLine(from, to, color = currentColor, size = currentBrushSize, emit = true) {
-      ctx.strokeStyle = color;
+    function drawLine(from, to, color = currentColor, size = currentBrushSize, isEraserDraw = isEraser, emit = true) {
+      ctx.strokeStyle = isEraserDraw ? '#fff' : color;
       ctx.lineWidth = size;
       ctx.lineCap = 'round';
       ctx.beginPath();
@@ -412,7 +432,7 @@
       ctx.stroke();
       ctx.closePath();
       if (emit && currentRoom) {
-        socket.emit('draw', { room: currentRoom, data: { from, to, color, size } });
+        socket.emit('draw', { room: currentRoom, data: { from, to, color, size, isEraser: isEraserDraw } });
       }
     }
 
@@ -425,7 +445,7 @@
     function moveDraw(e) {
       if (!drawing || !currentRoom) return;
       const pos = getPos(e);
-      drawLine(last, pos, currentColor, currentBrushSize, true);
+      drawLine(last, pos, currentColor, currentBrushSize, isEraser, true);
       last = pos;
       e.preventDefault();
     }
@@ -449,7 +469,15 @@
 
     // Receive drawing from others
     socket.on('draw', data => {
-      drawLine(data.from, data.to, data.color, data.size, false);
+      drawLine(data.from, data.to, data.color, data.size, data.isEraser, false);
+    });
+
+    // Receive canvas history and replay it
+    socket.on('canvasHistory', history => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      history.forEach(data => {
+        drawLine(data.from, data.to, data.color, data.size, data.isEraser, false);
+      });
     });
 
     // === Clear Canvas ===
@@ -463,13 +491,6 @@
     clearBtn.onclick = () => clearCanvas();
 
     socket.on('clear', () => clearCanvas(false));
-
-    // === Clear canvas on join ===
-    socket.on('system', msg => {
-      if (msg.includes('joined')) {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-      }
-    });
 
     // === Chat ===
     const chatBox = document.getElementById('chat-box');
