@@ -9,8 +9,7 @@
   <!-- Pinch Zoom -->
   <script src="https://cdn.jsdelivr.net/npm/pinch-zoom-js@2.3.4/dist/pinch-zoom.umd.min.js"></script>
   <!-- Cute Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&display=swap" rel="stylesheet">
-
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
   <style>
     body {
       background: linear-gradient(135deg, #e3f0ff 0%, #b3e0ff 100%);
@@ -29,15 +28,13 @@
       user-select: none;
       pointer-events: none;
     }
-    @media (max-width: 600px) {
-      .cute-app-title { font-size: 1.5rem; }
-    }
     .cute-title {
       font-size: 3rem;
       font-weight: 700;
       letter-spacing: 2px;
       color: #1976d2;
       text-shadow: 0 2px 8px #fff8;
+      font-family: 'Baloo 2', cursive, sans-serif;
     }
     .arrow {
       animation: bounce 1.2s infinite;
@@ -117,6 +114,33 @@
       box-shadow: 0 1px 4px #b3e0ff44;
       padding: 0;
     }
+    #brush-row {
+      margin-bottom: 10px;
+    }
+    .brush-btn {
+      border: 2px solid #b3e0ff;
+      background: #fff;
+      color: #1976d2;
+      font-size: 1.1rem;
+      margin-right: 2px;
+      margin-left: 2px;
+      transition: border 0.2s, background 0.2s;
+    }
+    .brush-btn.selected {
+      border: 2px solid #1976d2;
+      background: #e3f0ff;
+    }
+    #brush-slider {
+      accent-color: #1976d2;
+      vertical-align: middle;
+    }
+    #brush-size-label {
+      min-width: 32px;
+      display: inline-block;
+      text-align: left;
+      color: #1976d2;
+      font-weight: 600;
+    }
     #chat-box {
       background: #e3f2fd;
       color: #222;
@@ -178,7 +202,7 @@
 </head>
 <body>
   <!-- Cute App Title -->
- <div class="cute-app-title text-center my-3">mdzy art place</div>
+  <div class="cute-app-title text-center my-3">mdzy art place</div>
 
   <!-- Welcome Modal -->
   <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true">
@@ -192,7 +216,10 @@
           <div class="arrow mb-4">
             <svg width="40" height="40" viewBox="0 0 24 24"><path fill="#1976d2" d="M12 16.5l-8-8 1.41-1.42L12 13.67l6.59-6.59L20 8.5z"/></svg>
           </div>
-          <button id="join-btn" class="btn btn-cute px-5 py-2">Join</button>
+          <form id="name-form" autocomplete="off" class="mb-3">
+            <input type="text" id="user-name" class="form-control mb-3" placeholder="Enter your name" maxlength="16" required style="max-width:220px;display:inline-block;">
+            <button id="join-btn" class="btn btn-cute px-5 py-2" type="submit">Join</button>
+          </form>
         </div>
       </div>
     </div>
@@ -217,6 +244,14 @@
         <button class="color-btn" data-color="#8e24aa" style="background:#8e24aa;" title="Purple"></button>
         <input type="color" id="custom-color" value="#1976d2" title="Custom color">
         <button id="clear-btn" class="btn">Clear</button>
+      </div>
+      <div id="brush-row" class="mb-2 d-flex align-items-center justify-content-center gap-2">
+        <span style="font-size:1.1rem;">🖌️</span>
+        <button class="brush-btn btn btn-light" data-size="2" style="width:28px;height:28px;border-radius:50%;">•</button>
+        <button class="brush-btn btn btn-light" data-size="5" style="width:32px;height:32px;border-radius:50%;">••</button>
+        <button class="brush-btn btn btn-light" data-size="10" style="width:36px;height:36px;border-radius:50%;">•••</button>
+        <input type="range" id="brush-slider" min="1" max="30" value="3" style="width:80px;">
+        <span id="brush-size-label" style="font-size:1.1rem;">3px</span>
       </div>
       <div id="canvas-container">
         <pinch-zoom>
@@ -251,12 +286,26 @@
     const welcomeModal = new bootstrap.Modal(welcomeModalEl);
     let joined = false;
     let currentRoom = 'default';
+    let userName = '';
 
-    document.getElementById('join-btn').onclick = () => {
+    // Name form logic
+    const nameForm = document.getElementById('name-form');
+    const userNameInput = document.getElementById('user-name');
+    nameForm.onsubmit = (e) => {
+      e.preventDefault();
+      const name = userNameInput.value.trim();
+      if (!name) {
+        userNameInput.classList.add('is-invalid');
+        userNameInput.focus();
+        return;
+      }
+      userNameInput.classList.remove('is-invalid');
+      userName = name;
       joined = true;
       welcomeModal.hide();
       socket.emit('joinRoom', currentRoom);
     };
+
     document.getElementById('leave-btn').onclick = () => {
       joined = false;
       welcomeModal.show();
@@ -277,6 +326,15 @@
     music.volume = 0.5;
     let musicOn = false;
     // Autoplay may be blocked until user interacts
+    nameForm.addEventListener('submit', () => {
+      setTimeout(() => {
+        if (!musicOn) {
+          music.play().catch(()=>{});
+          musicToggle.textContent = '🔊';
+          musicOn = true;
+        }
+      }, 500);
+    });
     musicToggle.onclick = () => {
       if (music.paused) {
         music.play();
@@ -288,16 +346,6 @@
         musicOn = false;
       }
     };
-    // Try to play after user joins
-    document.getElementById('join-btn').addEventListener('click', () => {
-      setTimeout(() => {
-        if (!musicOn) {
-          music.play().catch(()=>{});
-          musicToggle.textContent = '🔊';
-          musicOn = true;
-        }
-      }, 500);
-    });
 
     // === Color Picker ===
     let currentColor = '#1976d2';
@@ -317,6 +365,27 @@
     };
     // Set initial color
     selectColor('#1976d2');
+
+    // === Brush Size Picker ===
+    let currentBrushSize = 3;
+    function selectBrush(size) {
+      currentBrushSize = size;
+      document.getElementById('brush-slider').value = size;
+      document.getElementById('brush-size-label').textContent = size + 'px';
+      document.querySelectorAll('.brush-btn').forEach(btn => {
+        btn.classList.toggle('selected', parseInt(btn.getAttribute('data-size')) === size);
+      });
+    }
+    document.querySelectorAll('.brush-btn').forEach(btn => {
+      btn.onclick = () => selectBrush(parseInt(btn.getAttribute('data-size')));
+    });
+    document.getElementById('brush-slider').oninput = (e) => {
+      currentBrushSize = parseInt(e.target.value);
+      document.getElementById('brush-size-label').textContent = currentBrushSize + 'px';
+      document.querySelectorAll('.brush-btn').forEach(btn => btn.classList.remove('selected'));
+    };
+    // Set initial brush size
+    selectBrush(3);
 
     // === Canvas Drawing ===
     const canvas = document.getElementById('canvas');
@@ -342,9 +411,9 @@
       };
     }
 
-    function drawLine(from, to, color = currentColor, emit = true) {
+    function drawLine(from, to, color = currentColor, size = currentBrushSize, emit = true) {
       ctx.strokeStyle = color;
-      ctx.lineWidth = 3;
+      ctx.lineWidth = size;
       ctx.lineCap = 'round';
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
@@ -352,7 +421,7 @@
       ctx.stroke();
       ctx.closePath();
       if (emit && currentRoom) {
-        socket.emit('draw', { room: currentRoom, data: { from, to, color } });
+        socket.emit('draw', { room: currentRoom, data: { from, to, color, size } });
       }
     }
 
@@ -365,7 +434,7 @@
     function moveDraw(e) {
       if (!drawing || !currentRoom) return;
       const pos = getPos(e);
-      drawLine(last, pos, currentColor, true);
+      drawLine(last, pos, currentColor, currentBrushSize, true);
       last = pos;
       e.preventDefault();
     }
@@ -389,7 +458,7 @@
 
     // Receive drawing from others
     socket.on('draw', data => {
-      drawLine(data.from, data.to, data.color, false);
+      drawLine(data.from, data.to, data.color, data.size, false);
     });
 
     // === Clear Canvas ===
@@ -424,8 +493,9 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    socket.on('chat', ({ id, message }) => {
-      addMessage(`<b>${id}:</b> ${message}`);
+    socket.on('chat', ({ id, message, name }) => {
+      const displayName = name ? `<span style="color:#1976d2;font-weight:600;">${name}</span>` : `<b>${id}</b>`;
+      addMessage(`${displayName}: ${message}`);
     });
     socket.on('system', msg => addMessage(`<span style="color:#1976d2">${msg}</span>`, true));
 
@@ -434,7 +504,7 @@
       if (!currentRoom) return;
       const msg = chatInput.value.trim();
       if (!msg) return;
-      socket.emit('chat', { room: currentRoom, message: msg });
+      socket.emit('chat', { room: currentRoom, message: msg, name: userName });
       chatInput.value = '';
     };
   </script>
