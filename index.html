@@ -26,8 +26,8 @@
       border-radius: 10px;
       touch-action: none;
       width: 100%;
-      max-width: 600px;
-      height: 300px;
+      max-width: 900px;
+      height: 500px;
       display: block;
       margin: 0 auto 20px auto;
       border: 2px solid #1565c0;
@@ -53,6 +53,9 @@
       font-size: 1.5rem;
       cursor: pointer;
     }
+    @media (max-width: 900px) {
+      #canvas { height: 300px; }
+    }
     @media (max-width: 600px) {
       #canvas { height: 200px; }
       #mdzyart-title { font-size: 2rem; }
@@ -67,7 +70,7 @@
       <button type="submit" class="btn btn-light">Join</button>
       <button type="button" id="leave-btn" class="btn btn-danger" disabled>Leave</button>
     </form>
-    <canvas id="canvas" width="600" height="300"></canvas>
+    <canvas id="canvas" width="900" height="500"></canvas>
     <div id="chat-box"></div>
     <form id="chat-form" autocomplete="off">
       <input type="text" id="chat-input" class="form-control" placeholder="Type a message..." style="max-width: 300px;">
@@ -80,8 +83,8 @@
   <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
   <script>
     // === CONFIG ===
-    // Change this to your backend URL!
-    const SERVER_URL = 'https://mdzyart.onrender.com'; // e.g. https://mdzyart-backend.glitch.me
+    // CHANGE THIS to your backend URL!
+    const SERVER_URL = 'https://YOUR-BACKEND-URL.onrender.com'; // <--- CHANGE THIS
 
     // === SOCKET.IO ===
     const socket = io(SERVER_URL);
@@ -154,11 +157,16 @@
     let drawing = false, last = null;
 
     function getPos(e) {
-      if (e.touches) {
-        const rect = canvas.getBoundingClientRect();
+      const rect = canvas.getBoundingClientRect();
+      if (e.touches && e.touches.length > 0) {
         return {
           x: (e.touches[0].clientX - rect.left) * (canvas.width / rect.width),
           y: (e.touches[0].clientY - rect.top) * (canvas.height / rect.height)
+        };
+      } else if (e.changedTouches && e.changedTouches.length > 0) {
+        return {
+          x: (e.changedTouches[0].clientX - rect.left) * (canvas.width / rect.width),
+          y: (e.changedTouches[0].clientY - rect.top) * (canvas.height / rect.height)
         };
       } else {
         return {
@@ -186,16 +194,19 @@
       if (!currentRoom) return;
       drawing = true;
       last = getPos(e);
+      e.preventDefault();
     }
     function moveDraw(e) {
       if (!drawing || !currentRoom) return;
       const pos = getPos(e);
       drawLine(last, pos);
       last = pos;
+      e.preventDefault();
     }
-    function endDraw() {
+    function endDraw(e) {
       drawing = false;
       last = null;
+      if (e) e.preventDefault();
     }
 
     // Mouse events
@@ -203,10 +214,12 @@
     canvas.addEventListener('mousemove', moveDraw);
     canvas.addEventListener('mouseup', endDraw);
     canvas.addEventListener('mouseleave', endDraw);
+
     // Touch events
-    canvas.addEventListener('touchstart', startDraw);
-    canvas.addEventListener('touchmove', moveDraw);
-    canvas.addEventListener('touchend', endDraw);
+    canvas.addEventListener('touchstart', startDraw, { passive: false });
+    canvas.addEventListener('touchmove', moveDraw, { passive: false });
+    canvas.addEventListener('touchend', endDraw, { passive: false });
+    canvas.addEventListener('touchcancel', endDraw, { passive: false });
 
     // Receive drawing from others
     socket.on('draw', data => {
