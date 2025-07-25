@@ -1,519 +1,442 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <title>Multiplayer Tic-Tac-Toe</title>
-    <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background: linear-gradient(135deg, #6ec6ff 0%, #2196f3 100%);
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-family: 'Fredoka One', cursive;
-            margin: 0;
-        }
-
-        .container {
-            background: #fff;
-            border-radius: 30px;
-            box-shadow: 0 8px 32px rgba(33, 150, 243, 0.2);
-            padding: 32px 24px 24px 24px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            min-width: 340px;
-            position: relative;
-        }
-
-        h1 {
-            color: #2196f3;
-            margin-bottom: 10px;
-            font-size: 2.2rem;
-            letter-spacing: 2px;
-            text-shadow: 1px 2px 0 #b3e5fc;
-        }
-
-        #status {
-            font-size: 1.2rem;
-            margin-bottom: 18px;
-            color: #1976d2;
-            min-height: 28px;
-            text-align: center;
-        }
-
-        .board {
-            display: grid;
-            grid-template-columns: repeat(3, 70px);
-            grid-template-rows: repeat(3, 70px);
-            gap: 12px;
-            margin-bottom: 18px;
-        }
-
-        .cell {
-            width: 70px;
-            height: 70px;
-            background: #e3f2fd;
-            border-radius: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2.7rem;
-            color: #1976d2;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.08);
-            transition: background 0.2s, transform 0.1s;
-            user-select: none;
-            position: relative;
-        }
-
-        .cell:hover {
-            background: #bbdefb;
-            transform: scale(1.05);
-        }
-
-        .cell.x {
-            color: #ff80ab;
-            text-shadow: 1px 2px 0 #fce4ec;
-        }
-
-        .cell.o {
-            color: #64b5f6;
-            text-shadow: 1px 2px 0 #e3f2fd;
-        }
-
-        .cell.triangle {
-            color: #ffd600;
-            text-shadow: 1px 2px 0 #fffde7;
-        }
-
-        .cell.star {
-            color: #ffb300;
-            text-shadow: 1px 2px 0 #fffde7;
-        }
-
-        .cell.octagon {
-            color: #8d6e63;
-            text-shadow: 1px 2px 0 #d7ccc8;
-        }
-
-        .cell.winner {
-            background: #fff59d !important;
-            animation: winnerPulse 0.7s infinite alternate;
-        }
-
-        @keyframes winnerPulse {
-            0% {
-                box-shadow: 0 0 0 0 #fffde7;
-            }
-
-            100% {
-                box-shadow: 0 0 16px 6px #fffde7;
-            }
-        }
-
-        .footer {
-            margin-top: 18px;
-            font-size: 0.95rem;
-            color: #90caf9;
-            text-align: center;
-            letter-spacing: 1px;
-        }
-
-        .room-box {
-            margin-bottom: 18px;
-            text-align: center;
-        }
-
-        .room-input {
-            padding: 8px 12px;
-            border-radius: 8px;
-            border: 1px solid #90caf9;
-            font-size: 1.1rem;
-            margin-right: 8px;
-            width: 120px;
-            text-align: center;
-        }
-
-        .room-btn {
-            background: #2196f3;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 8px 18px;
-            font-size: 1.1rem;
-            font-family: inherit;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.12);
-            transition: background 0.2s;
-            margin-top: 8px;
-        }
-
-        .room-btn:hover {
-            background: #1976d2;
-        }
-
-        .pick-btns {
-            display: flex;
-            gap: 12px;
-            margin-bottom: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .pick-btn {
-            background: #e3f2fd;
-            border: 3px solid transparent;
-            border-radius: 50%;
-            width: 54px;
-            height: 54px;
-            font-size: 1.7rem;
-            color: #2196f3;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.10);
-            transition: background 0.2s, transform 0.1s, border 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 8px;
-        }
-
-        .pick-btn.selected {
-            border: 3px solid #2196f3;
-            background: #bbdefb;
-            transform: scale(1.12);
-        }
-
-        .pick-btn.x {
-            color: #ff80ab;
-        }
-
-        .pick-btn.o {
-            color: #64b5f6;
-        }
-
-        .pick-btn.triangle {
-            color: #ffd600;
-        }
-
-        .pick-btn.star {
-            color: #ffb300;
-        }
-
-        .pick-btn.octagon {
-            color: #8d6e63;
-        }
-
-        .pick-btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .start-go-btn {
-            margin-top: 12px;
-            background: #2196f3;
-            color: #fff;
-            border: none;
-            border-radius: 18px;
-            padding: 8px 18px;
-            font-size: 1.1rem;
-            font-family: inherit;
-            cursor: pointer;
-            box-shadow: 0 2px 8px rgba(33, 150, 243, 0.12);
-            transition: background 0.2s;
-            display: block;
-            width: 100%;
-        }
-
-        .start-go-btn:disabled {
-            background: #90caf9;
-            cursor: not-allowed;
-        }
-
-        .hide {
-            display: none !important;
-        }
-    </style>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <meta charset="UTF-8">
+  <title>Multiplayer Tic-Tac-Toe (Default Room)</title>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
+  <style>
+    body {
+      background: linear-gradient(135deg, #6ec6ff 0%, #2196f3 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka One', cursive;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      border-radius: 30px;
+      box-shadow: 0 8px 32px rgba(33,150,243,0.2);
+      padding: 32px 24px 24px 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 340px;
+      position: relative;
+    }
+    h1 {
+      color: #2196f3;
+      margin-bottom: 10px;
+      font-size: 2.2rem;
+      letter-spacing: 2px;
+      text-shadow: 1px 2px 0 #b3e5fc;
+    }
+    #status {
+      font-size: 1.2rem;
+      margin-bottom: 18px;
+      color: #1976d2;
+      min-height: 28px;
+      text-align: center;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 70px);
+      grid-template-rows: repeat(3, 70px);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+    .cell {
+      width: 70px;
+      height: 70px;
+      background: #e3f2fd;
+      border-radius: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.7rem;
+      color: #1976d2;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.08);
+      transition: background 0.2s, transform 0.1s;
+      user-select: none;
+      position: relative;
+    }
+    .cell:hover {
+      background: #bbdefb;
+      transform: scale(1.05);
+    }
+    .cell.x { color: #ff80ab; text-shadow: 1px 2px 0 #fce4ec; }
+    .cell.o { color: #64b5f6; text-shadow: 1px 2px 0 #e3f2fd; }
+    .cell.triangle { color: #ffd600; text-shadow: 1px 2px 0 #fffde7; }
+    .cell.star { color: #ffb300; text-shadow: 1px 2px 0 #fffde7; }
+    .cell.octagon { color: #8d6e63; text-shadow: 1px 2px 0 #d7ccc8; }
+    .cell.winner {
+      background: #fff59d !important;
+      animation: winnerPulse 0.7s infinite alternate;
+    }
+    @keyframes winnerPulse {
+      0% { box-shadow: 0 0 0 0 #fffde7; }
+      100% { box-shadow: 0 0 16px 6px #fffde7; }
+    }
+    .footer {
+      margin-top: 18px;
+      font-size: 0.95rem;
+      color: #90caf9;
+      text-align: center;
+      letter-spacing: 1px;
+    }
+    .player-count {
+      margin-bottom: 12px;
+      color: #1976d2;
+      font-size: 1.1rem;
+      text-align: center;
+    }
+    .pick-btns {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .pick-btn {
+      background: #e3f2fd;
+      border: 3px solid transparent;
+      border-radius: 50%;
+      width: 54px;
+      height: 54px;
+      font-size: 1.7rem;
+      color: #2196f3;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.10);
+      transition: background 0.2s, transform 0.1s, border 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+    }
+    .pick-btn.selected {
+      border: 3px solid #2196f3;
+      background: #bbdefb;
+      transform: scale(1.12);
+    }
+    .pick-btn.x { color: #ff80ab; }
+    .pick-btn.o { color: #64b5f6; }
+    .pick-btn.triangle { color: #ffd600; }
+    .pick-btn.star { color: #ffb300; }
+    .pick-btn.octagon { color: #8d6e63; }
+    .pick-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .start-go-btn {
+      margin-top: 12px;
+      background: #2196f3;
+      color: #fff;
+      border: none;
+      border-radius: 18px;
+      padding: 8px 18px;
+      font-size: 1.1rem;
+      font-family: inherit;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(33,150,243,0.12);
+      transition: background 0.2s;
+      display: block;
+      width: 100%;
+    }
+    .start-go-btn:disabled {
+      background: #90caf9;
+      cursor: not-allowed;
+    }
+    .hide { display: none !important; }
+    .error-msg {
+      color: #d32f2f;
+      font-size: 1.1rem;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+  </style>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
-
 <body>
-    <div class="container">
-        <h1>🐾 Multiplayer Tic-Tac-Toe</h1>
-        <div class="room-box" id="roomBox">
-            <div>
-                <input class="room-input" id="roomInput" placeholder="Room code" maxlength="8">
-                <button class="room-btn" id="createBtn">Create</button>
-                <button class="room-btn" id="joinBtn">Join</button>
-            </div>
-            <div id="roomStatus" style="margin-top:8px;color:#1976d2;font-size:1.1rem;"></div>
-        </div>
-        <div id="pickShapesBox" class="hide">
-            <div style="color:#2196f3;font-size:1.1rem;margin-bottom:8px;">Pick your shape:</div>
-            <div class="pick-btns" id="pickBtns">
-                <button class="pick-btn x" data-shape="X" title="X">✖️</button>
-                <button class="pick-btn o" data-shape="O" title="O">⭕</button>
-                <button class="pick-btn triangle" data-shape="▲" title="Triangle">▲</button>
-                <button class="pick-btn star" data-shape="⭐" title="Star">⭐</button>
-                <button class="pick-btn octagon" data-shape="⬣" title="Octagon">⬣</button>
-            </div>
-            <button class="start-go-btn" id="pickGoBtn" disabled>Confirm</button>
-        </div>
-        <div id="gameBox" class="hide">
-            <div id="status">Player <span id="current-player">X</span>'s turn</div>
-            <div class="board" id="board"></div>
-            <button class="room-btn" id="leaveBtn" style="margin-top:10px;">Leave Room</button>
-        </div>
-        <div class="footer">Made with 💙 for you!</div>
+  <div class="container">
+    <h1>🐾 Multiplayer Tic-Tac-Toe</h1>
+    <div class="player-count" id="playerCount"></div>
+    <div id="errorMsg" class="error-msg"></div>
+    <div id="pickShapesBox" class="hide">
+      <div style="color:#2196f3;font-size:1.1rem;margin-bottom:8px;">Pick your shape:</div>
+      <div class="pick-btns" id="pickBtns">
+        <button class="pick-btn x" data-shape="X" title="X">✖️</button>
+        <button class="pick-btn o" data-shape="O" title="O">⭕</button>
+        <button class="pick-btn triangle" data-shape="▲" title="Triangle">▲</button>
+        <button class="pick-btn star" data-shape="⭐" title="Star">⭐</button>
+        <button class="pick-btn octagon" data-shape="⬣" title="Octagon">⬣</button>
+      </div>
+      <button class="start-go-btn" id="pickGoBtn" disabled>Confirm</button>
     </div>
-    <audio id="moveSound" src="move.mp3"></audio>
-    <audio id="winSound" src="win.mp3"></audio>
-    <audio id="drawSound" src="draw.mp3"></audio>
-    <audio id="bgMusic" src="cute.mp3" loop></audio>
-    <script>
-        // --- Firebase config (replace with your own!) ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyBvuCa11QrFayslcyd0VQBy_u9iS5rmGAw",
-            authDomain: "mdzyart.firebaseapp.com",
-            projectId: "mdzyart",
-            storageBucket: "mdzyart.firebasestorage.app",
-            messagingSenderId: "1080700505217",
-            appId: "1:1080700505217:web:85b44653e6009add6fd180",
-            measurementId: "G-QKQKW8HTZD"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.database();
+    <div id="gameBox" class="hide">
+      <div id="status">Player <span id="current-player">X</span>'s turn</div>
+      <div class="board" id="board"></div>
+      <button class="start-go-btn" id="leaveBtn" style="margin-top:10px;">Leave Room</button>
+    </div>
+    <div class="footer">Made with 💙 for you!</div>
+  </div>
+  <audio id="moveSound" src="move.mp3"></audio>
+  <audio id="winSound" src="win.mp3"></audio>
+  <audio id="drawSound" src="draw.mp3"></audio>
+  <audio id="bgMusic" src="cute.mp3" loop></audio>
+  <script>
+    // --- Your Firebase config ---
+    const firebaseConfig = {
+      apiKey: "AIzaSyBvuCa11QrFayslcyd0VQBy_u9iS5rmGAw",
+      authDomain: "mdzyart.firebaseapp.com",
+      projectId: "mdzyart",
+      storageBucket: "mdzyart.firebasestorage.app",
+      messagingSenderId: "1080700505217",
+      appId: "1:1080700505217:web:85b44653e6009add6fd180",
+      measurementId: "G-QKQKW8HTZD"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
 
-        // --- UI elements ---
-        const roomBox = document.getElementById('roomBox');
-        const roomInput = document.getElementById('roomInput');
-        const createBtn = document.getElementById('createBtn');
-        const joinBtn = document.getElementById('joinBtn');
-        const roomStatus = document.getElementById('roomStatus');
-        const pickShapesBox = document.getElementById('pickShapesBox');
-        const pickBtns = document.getElementById('pickBtns');
-        const pickGoBtn = document.getElementById('pickGoBtn');
-        const gameBox = document.getElementById('gameBox');
-        const boardEl = document.getElementById('board');
-        const statusEl = document.getElementById('status');
-        const currentPlayerEl = document.getElementById('current-player');
-        const leaveBtn = document.getElementById('leaveBtn');
-        const moveSound = document.getElementById('moveSound');
-        const winSound = document.getElementById('winSound');
-        const drawSound = document.getElementById('drawSound');
-        const bgMusic = document.getElementById('bgMusic');
+    // --- UI elements ---
+    const playerCountEl = document.getElementById('playerCount');
+    const errorMsgEl = document.getElementById('errorMsg');
+    const pickShapesBox = document.getElementById('pickShapesBox');
+    const pickBtns = document.getElementById('pickBtns');
+    const pickGoBtn = document.getElementById('pickGoBtn');
+    const gameBox = document.getElementById('gameBox');
+    const boardEl = document.getElementById('board');
+    const statusEl = document.getElementById('status');
+    const currentPlayerEl = document.getElementById('current-player');
+    const leaveBtn = document.getElementById('leaveBtn');
+    const moveSound = document.getElementById('moveSound');
+    const winSound = document.getElementById('winSound');
+    const drawSound = document.getElementById('drawSound');
+    const bgMusic = document.getElementById('bgMusic');
 
-        // --- Game state ---
-        const shapes = [
-            { key: 'X', icon: '✖️', class: 'x' },
-            { key: 'O', icon: '⭕', class: 'o' },
-            { key: '▲', icon: '▲', class: 'triangle' },
-            { key: '⭐', icon: '⭐', class: 'star' },
-            { key: '⬣', icon: '⬣', class: 'octagon' }
-        ];
-        let roomId = null;
-        let playerId = null;
-        let playerShape = null;
-        let opponentShape = null;
-        let unsubscribe = null;
+    // --- Game state ---
+    const shapes = [
+      { key: 'X', icon: '✖️', class: 'x' },
+      { key: 'O', icon: '⭕', class: 'o' },
+      { key: '▲', icon: '▲', class: 'triangle' },
+      { key: '⭐', icon: '⭐', class: 'star' },
+      { key: '⬣', icon: '⬣', class: 'octagon' }
+    ];
+    const ROOM_ID = "default-room";
+    let playerId = null;
+    let playerShape = null;
+    let opponentShape = null;
+    let unsubscribe = null;
+    let playerRef = null;
 
-        // --- Music ---
-        bgMusic.volume = 1.0;
-        document.body.addEventListener('mousedown', () => { bgMusic.play().catch(() => { }); }, { once: true });
+    // --- Music ---
+    bgMusic.volume = 1.0;
+    document.body.addEventListener('mousedown', () => { bgMusic.play().catch(()=>{}); }, { once: true });
 
-        // --- Room logic ---
-        function randomRoomCode() {
-            return Math.random().toString(36).substr(2, 6).toUpperCase();
+    // --- Player connection logic ---
+    function getPlayers(snapshot) {
+      const players = snapshot.val() || {};
+      return Object.entries(players)
+        .filter(([id, p]) => p && p.connected)
+        .map(([id, p]) => ({ id, ...p }));
+    }
+
+    function updatePlayerCount(count) {
+      playerCountEl.textContent = `Players connected: ${count}/2`;
+    }
+
+    function showError(msg) {
+      errorMsgEl.textContent = msg;
+    }
+    function clearError() {
+      errorMsgEl.textContent = "";
+    }
+
+    // --- Join default room ---
+    async function joinRoom() {
+      // Ensure room exists
+      await db.ref('rooms/' + ROOM_ID).set({
+        created: Date.now(),
+        players: {},
+        board: Array(9).fill(''),
+        turn: null,
+        winner: null
+      });
+
+      // Listen for player count
+      db.ref('rooms/' + ROOM_ID + '/players').on('value', snap => {
+        const players = getPlayers(snap);
+        updatePlayerCount(players.length);
+
+        // If already joined, do nothing
+        if (playerId) return;
+
+        // If room is full, show error
+        if (players.length >= 2) {
+          showError("Room is full! Only 2 players allowed.");
+          pickShapesBox.classList.add('hide');
+          gameBox.classList.add('hide');
+          return;
         }
-        function showStatus(msg, color = "#1976d2") {
-            roomStatus.textContent = msg;
-            roomStatus.style.color = color;
-        }
-        function resetUI() {
-            roomBox.classList.remove('hide');
-            pickShapesBox.classList.add('hide');
-            gameBox.classList.add('hide');
-            showStatus('');
-            roomInput.value = '';
-            playerId = null;
-            playerShape = null;
-            opponentShape = null;
-            if (unsubscribe) unsubscribe();
-        }
-        function showPickShapes() {
-            roomBox.classList.add('hide');
-            pickShapesBox.classList.remove('hide');
-            gameBox.classList.add('hide');
-            Array.from(pickBtns.children).forEach(btn => {
-                btn.classList.remove('selected');
-                btn.disabled = false;
-            });
-            pickGoBtn.disabled = true;
-        }
-        function showGame() {
-            roomBox.classList.add('hide');
-            pickShapesBox.classList.add('hide');
-            gameBox.classList.remove('hide');
-        }
 
-        // --- Create/Join Room ---
-        createBtn.onclick = async () => {
-            roomId = randomRoomCode();
-            playerId = 'player1';
-            await db.ref('rooms/' + roomId).set({
-                created: Date.now(),
-                players: { player1: { shape: null } },
-                board: Array(9).fill(''),
-                turn: null,
-                winner: null
-            });
-            showStatus(`Room created! Code: ${roomId}`, "#388e3c");
-            showPickShapes();
-        };
-        joinBtn.onclick = async () => {
-            roomId = roomInput.value.trim().toUpperCase();
-            if (!roomId) return showStatus("Enter a room code!", "#d32f2f");
-            const snap = await db.ref('rooms/' + roomId).get();
-            if (!snap.exists()) return showStatus("Room not found!", "#d32f2f");
-            const data = snap.val();
-            if (data.players && data.players.player2) return showStatus("Room full!", "#d32f2f");
-            playerId = 'player2';
-            await db.ref('rooms/' + roomId + '/players/player2').set({ shape: null });
-            showStatus(`Joined room ${roomId}!`, "#388e3c");
-            showPickShapes();
-        };
+        // Assign playerId (player1 or player2)
+        playerId = players.find(p => p.id === "player1") ? "player2" : "player1";
+        playerRef = db.ref(`rooms/${ROOM_ID}/players/${playerId}`);
 
-        // --- Shape selection ---
-        let selectedShape = null;
-        pickBtns.addEventListener('click', function (e) {
-            if (!e.target.classList.contains('pick-btn')) return;
-            const shape = e.target.getAttribute('data-shape');
-            Array.from(pickBtns.children).forEach(btn => btn.classList.remove('selected'));
-            e.target.classList.add('selected');
-            selectedShape = shape;
-            pickGoBtn.disabled = false;
-        });
-        pickGoBtn.onclick = async () => {
-            if (!selectedShape) return;
-            // Save shape to Firebase
-            await db.ref(`rooms/${roomId}/players/${playerId}/shape`).set(selectedShape);
-            playerShape = selectedShape;
-            pickGoBtn.disabled = true;
-            showStatus("Waiting for opponent to pick...", "#1976d2");
-            // Wait for opponent to pick
-            db.ref(`rooms/${roomId}/players`).on('value', snap => {
-                const players = snap.val();
-                if (!players) return;
-                let other = playerId === 'player1' ? 'player2' : 'player1';
-                if (players[other] && players[other].shape) {
-                    opponentShape = players[other].shape;
-                    // Set turn if not set
-                    db.ref(`rooms/${roomId}/turn`).get().then(turnSnap => {
-                        if (!turnSnap.exists()) {
-                            // Randomly pick who starts
-                            const first = Math.random() < 0.5 ? playerShape : opponentShape;
-                            db.ref(`rooms/${roomId}/turn`).set(first);
-                        }
-                    });
-                    showGame();
-                    subscribeToGame();
-                    db.ref(`rooms/${roomId}/players`).off();
-                }
-            });
-        };
+        // Set player as connected
+        playerRef.set({ connected: true, shape: null });
+        playerRef.onDisconnect().remove();
 
-        // --- Game logic ---
-        function subscribeToGame() {
-            unsubscribe = db.ref('rooms/' + roomId).on('value', snap => {
-                const data = snap.val();
-                if (!data) return;
-                renderBoard(data.board, data.turn, data.winner);
-            });
-        }
-        function renderBoard(board, turn, winner) {
-            boardEl.innerHTML = '';
-            for (let i = 0; i < 9; i++) {
-                const cell = document.createElement('div');
-                let cellClass = 'cell';
-                const shapeObj = shapes.find(s => s.key === board[i]);
-                if (shapeObj) cellClass += ' ' + shapeObj.class;
-                cell.className = cellClass;
-                cell.dataset.index = i;
-                cell.innerHTML = shapeObj ? shapeObj.icon : '';
-                if (!winner && turn === playerShape && !board[i]) {
-                    cell.addEventListener('click', () => makeMove(i, board));
-                }
-                boardEl.appendChild(cell);
+        // Show shape picker
+        showPickShapes();
+        clearError();
+      });
+    }
+
+    // --- Shape selection ---
+    let selectedShape = null;
+    pickBtns.addEventListener('click', function(e) {
+      if (!e.target.classList.contains('pick-btn')) return;
+      const shape = e.target.getAttribute('data-shape');
+      Array.from(pickBtns.children).forEach(btn => btn.classList.remove('selected'));
+      e.target.classList.add('selected');
+      selectedShape = shape;
+      pickGoBtn.disabled = false;
+    });
+    pickGoBtn.onclick = async () => {
+      if (!selectedShape) return;
+      // Save shape to Firebase
+      await playerRef.update({ shape: selectedShape });
+      playerShape = selectedShape;
+      pickGoBtn.disabled = true;
+      showError("Waiting for opponent to pick...");
+      // Wait for opponent to pick
+      db.ref(`rooms/${ROOM_ID}/players`).on('value', snap => {
+        const players = getPlayers(snap);
+        let other = playerId === 'player1' ? 'player2' : 'player1';
+        let otherPlayer = players.find(p => p.id === other);
+        if (otherPlayer && otherPlayer.shape) {
+          opponentShape = otherPlayer.shape;
+          // Set turn if not set
+          db.ref(`rooms/${ROOM_ID}/turn`).get().then(turnSnap => {
+            if (!turnSnap.exists()) {
+              // Randomly pick who starts
+              const first = Math.random() < 0.5 ? playerShape : opponentShape;
+              db.ref(`rooms/${ROOM_ID}/turn`).set(first);
             }
-            currentPlayerEl.textContent = turn || '';
-            if (winner) {
-                if (winner === 'draw') {
-                    statusEl.textContent = "It's a draw! 😺";
-                    playDrawSound();
-                } else {
-                    statusEl.innerHTML = `🎉 Player <span id="current-player">${winner}</span> wins!`;
-                    playWinSound();
-                }
-            } else {
-                statusEl.innerHTML = `Player <span id="current-player">${turn}</span>'s turn`;
-            }
+          });
+          showGame();
+          subscribeToGame();
+          db.ref(`rooms/${ROOM_ID}/players`).off();
+          clearError();
         }
-        async function makeMove(idx, board) {
-            // Only allow if it's your turn and cell is empty
-            const snap = await db.ref('rooms/' + roomId).get();
-            const data = snap.val();
-            if (data.turn !== playerShape || data.board[idx] || data.winner) return;
-            board[idx] = playerShape;
-            playMoveSound();
-            // Check winner
-            const winner = checkWinner(board);
-            let nextTurn = (playerShape === data.players.player1.shape) ? data.players.player2.shape : data.players.player1.shape;
-            await db.ref('rooms/' + roomId).update({
-                board,
-                turn: winner ? null : nextTurn,
-                winner: winner
-            });
+      });
+    };
+
+    function showPickShapes() {
+      pickShapesBox.classList.remove('hide');
+      gameBox.classList.add('hide');
+      Array.from(pickBtns.children).forEach(btn => {
+        btn.classList.remove('selected');
+        btn.disabled = false;
+      });
+      pickGoBtn.disabled = true;
+    }
+    function showGame() {
+      pickShapesBox.classList.add('hide');
+      gameBox.classList.remove('hide');
+    }
+
+    // --- Game logic ---
+    function subscribeToGame() {
+      unsubscribe = db.ref('rooms/' + ROOM_ID).on('value', snap => {
+        const data = snap.val();
+        if (!data) return;
+        renderBoard(data.board, data.turn, data.winner);
+      });
+    }
+    function renderBoard(board, turn, winner) {
+      boardEl.innerHTML = '';
+      for (let i = 0; i < 9; i++) {
+        const cell = document.createElement('div');
+        let cellClass = 'cell';
+        const shapeObj = shapes.find(s => s.key === board[i]);
+        if (shapeObj) cellClass += ' ' + shapeObj.class;
+        cell.className = cellClass;
+        cell.dataset.index = i;
+        cell.innerHTML = shapeObj ? shapeObj.icon : '';
+        if (!winner && turn === playerShape && !board[i]) {
+          cell.addEventListener('click', () => makeMove(i, board));
         }
-        function checkWinner(board) {
-            const winPatterns = [
-                [0, 1, 2], [3, 4, 5], [6, 7, 8],
-                [0, 3, 6], [1, 4, 7], [2, 5, 8],
-                [0, 4, 8], [2, 4, 6]
-            ];
-            for (let pattern of winPatterns) {
-                const [a, b, c] = pattern;
-                if (board[a] && board[a] === board[b] && board[a] === board[c]) {
-                    return board[a];
-                }
-            }
-            if (board.every(cell => cell)) return 'draw';
-            return null;
+        boardEl.appendChild(cell);
+      }
+      currentPlayerEl.textContent = turn || '';
+      if (winner) {
+        if (winner === 'draw') {
+          statusEl.textContent = "It's a draw! 😺";
+          playDrawSound();
+        } else {
+          statusEl.innerHTML = `🎉 Player <span id="current-player">${winner}</span> wins!`;
+          playWinSound();
         }
+      } else {
+        statusEl.innerHTML = `Player <span id="current-player">${turn}</span>'s turn`;
+      }
+    }
+    async function makeMove(idx, board) {
+      // Only allow if it's your turn and cell is empty
+      const snap = await db.ref('rooms/' + ROOM_ID).get();
+      const data = snap.val();
+      if (data.turn !== playerShape || data.board[idx] || data.winner) return;
+      board[idx] = playerShape;
+      playMoveSound();
+      // Check winner
+      const winner = checkWinner(board);
+      let nextTurn = (playerShape === data.players.player1.shape) ? data.players.player2.shape : data.players.player1.shape;
+      await db.ref('rooms/' + ROOM_ID).update({
+        board,
+        turn: winner ? null : nextTurn,
+        winner: winner
+      });
+    }
+    function checkWinner(board) {
+      const winPatterns = [
+        [0,1,2],[3,4,5],[6,7,8],
+        [0,3,6],[1,4,7],[2,5,8],
+        [0,4,8],[2,4,6]
+      ];
+      for (let pattern of winPatterns) {
+        const [a, b, c] = pattern;
+        if (board[a] && board[a] === board[b] && board[a] === board[c]) {
+          return board[a];
+        }
+      }
+      if (board.every(cell => cell)) return 'draw';
+      return null;
+    }
 
-        // --- Leave room/reset ---
-        leaveBtn.onclick = async () => {
-            if (roomId && playerId) {
-                await db.ref(`rooms/${roomId}/players/${playerId}`).remove();
-                // If both players left, remove room
-                db.ref(`rooms/${roomId}/players`).get().then(snap => {
-                    if (!snap.exists()) db.ref(`rooms/${roomId}`).remove();
-                });
-            }
-            resetUI();
-        };
+    // --- Leave room/reset ---
+    leaveBtn.onclick = async () => {
+      if (playerRef) {
+        await playerRef.remove();
+      }
+      playerId = null;
+      playerShape = null;
+      opponentShape = null;
+      unsubscribe && db.ref('rooms/' + ROOM_ID).off();
+      showPickShapes();
+    };
 
-        // --- Sound helpers ---
-        function playMoveSound() { moveSound.currentTime = 0; moveSound.play().catch(() => { }); }
-        function playWinSound() { winSound.currentTime = 0; winSound.play().catch(() => { }); }
-        function playDrawSound() { drawSound.currentTime = 0; drawSound.play().catch(() => { }); }
+    // --- Sound helpers ---
+    function playMoveSound() { moveSound.currentTime = 0; moveSound.play().catch(()=>{}); }
+    function playWinSound() { winSound.currentTime = 0; winSound.play().catch(()=>{}); }
+    function playDrawSound() { drawSound.currentTime = 0; drawSound.play().catch(()=>{}); }
 
-        // --- Init ---
-        resetUI();
-    </script>
+    // --- Init ---
+    joinRoom();
+  </script>
 </body>
-
 </html>
