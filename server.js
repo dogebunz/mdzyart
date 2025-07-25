@@ -5,7 +5,6 @@ const cors = require('cors');
 
 const app = express();
 
-// CORS: allow your GitHub Pages domain
 app.use(cors({
   origin: [
     'https://dogebunz.github.io',
@@ -28,38 +27,50 @@ const io = new Server(server, {
   }
 });
 
+// --- Store usernames by socket.id ---
+const userNames = {};
+
 io.on('connection', (socket) => {
-  let currentRoom = null;
+  socket.currentRoom = null;
 
-  socket.on('clear', ({ room }) => {
-  socket.to(room).emit('clear');
-  });
-  
-  socket.on('joinRoom', (room) => {
-    if (currentRoom) socket.leave(currentRoom);
-    currentRoom = room;
+  // --- Join Room with Name ---
+  socket.on('joinRoom', ({ room, name }) => {
+    if (socket.currentRoom) socket.leave(socket.currentRoom);
+    socket.currentRoom = room;
+    userNames[socket.id] = name || 'Anonymous';
     socket.join(room);
-    io.to(room).emit('system', `User ${socket.id.slice(0, 5)} joined`);
+    io.to(room).emit('system', `<b>${userNames[socket.id]}</b> joined`);
   });
 
+  // --- Leave Room ---
   socket.on('leaveRoom', (room) => {
     socket.leave(room);
-    io.to(room).emit('system', `User ${socket.id.slice(0, 5)} left`);
-    currentRoom = null;
+    io.to(room).emit('system', `<b>${userNames[socket.id] || 'Someone'}</b> left`);
+    delete userNames[socket.id];
+    socket.currentRoom = null;
   });
 
-  socket.on('chat', ({ room, message }) => {
-    io.to(room).emit('chat', { id: socket.id.slice(0, 5), message });
+  // --- Chat Message ---
+  socket.on('chat', ({ room, message, name }) => {
+    const displayName = name || userNames[socket.id] || 'Anonymous';
+    io.to(room).emit('chat', { id: socket.id.slice(0, 5), message, name: displayName });
   });
 
-  socket.on('draw', data => {
-  drawLine(data.from, data.to, data.color, false);
-});
+  // --- Drawing ---
+  socket.on('draw', ({ room, data }) => {
+    socket.to(room).emit('draw', data);
+  });
 
+  // --- Clear Canvas ---
+  socket.on('clear', ({ room }) => {
+    socket.to(room).emit('clear');
+  });
 
+  // --- Disconnect ---
   socket.on('disconnect', () => {
-    if (currentRoom) {
-      io.to(currentRoom).emit('system', `User ${socket.id.slice(0, 5)} disconnected`);
+    if (socket.currentRoom) {
+      io.to(socket.currentRoom).emit('system', `<b>${userNames[socket.id] || 'Someone'}</b> disconnected`);
+      delete userNames[socket.id];
     }
   });
 });
