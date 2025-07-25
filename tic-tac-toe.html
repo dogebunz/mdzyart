@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Multiplayer Tic-Tac-Toe (with Chat!)</title>
+  <title>Multiplayer Tic-Tac-Toe (with Chat & Unique Players)</title>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka+One&display=swap" rel="stylesheet">
   <style>
     body {
@@ -362,13 +362,16 @@
       { key: '⬣', icon: '⬣', class: 'octagon' }
     ];
     const ROOM_ID = "default-room";
-    let playerId = null;
+    function generatePlayerId() {
+      return 'player-' + Math.random().toString(36).substr(2, 9);
+    }
+    let playerId = generatePlayerId();
     let playerShape = null;
     let opponentShape = null;
     let unsubscribe = null;
     let playerRef = null;
     let selectedShape = null;
-    let playerName = "";
+    let myRole = null; // "player1" or "player2"
 
     // --- Music ---
     bgMusic.volume = 1.0;
@@ -384,6 +387,7 @@
       const players = snapshot.val() || {};
       return Object.entries(players)
         .filter(([id, p]) => p && p.connected)
+        .sort((a, b) => a[1].joined - b[1].joined)
         .map(([id, p]) => ({ id, ...p }));
     }
 
@@ -410,45 +414,43 @@
         winner: null
       });
 
-      // Listen for player count and shape selection in real time
+      // Add yourself to the players list with a timestamp
+      playerRef = db.ref(`rooms/${ROOM_ID}/players/${playerId}`);
+      await playerRef.set({ connected: true, shape: null, joined: Date.now() });
+      playerRef.onDisconnect().remove();
+
+      // Listen for player list changes
       db.ref('rooms/' + ROOM_ID + '/players').on('value', snap => {
         const players = getPlayers(snap);
         updatePlayerCount(players.length);
 
-        // If already joined, update shape buttons for opponent's pick
-        if (playerId) {
-          updateShapeButtons(players);
-          return;
-        }
-
-        // If room is full, show error
-        if (players.length >= 2) {
+        // Only allow first two players
+        const myIndex = players.findIndex(p => p.id === playerId);
+        if (myIndex === -1 || players.length > 2) {
           showError("Room is full! Only 2 players allowed.");
           pickShapesBox.classList.add('hide');
           gameBox.classList.add('hide');
           return;
         }
+        myRole = myIndex === 0 ? "player1" : "player2";
 
-        // Assign playerId (player1 or player2)
-        playerId = players.find(p => p.id === "player1") ? "player2" : "player1";
-        playerRef = db.ref(`rooms/${ROOM_ID}/players/${playerId}`);
+        // If already joined, update shape buttons for opponent's pick
+        updateShapeButtons(players);
 
-        // Set player as connected
-        playerRef.set({ connected: true, shape: null });
-        playerRef.onDisconnect().remove();
-
-        // Show shape picker
-        showPickShapes();
-        clearError();
+        // Show shape picker if not picked yet
+        if (!players[myIndex].shape) {
+          showPickShapes();
+          clearError();
+        }
       });
     }
 
     // --- Shape selection ---
     function updateShapeButtons(players) {
       // Find opponent's shape
-      let other = playerId === 'player1' ? 'player2' : 'player1';
-      let otherPlayer = players.find(p => p.id === other);
-      let takenShape = otherPlayer && otherPlayer.shape ? otherPlayer.shape : null;
+      const myIndex = players.findIndex(p => p.id === playerId);
+      const otherIndex = myIndex === 0 ? 1 : 0;
+      let takenShape = players[otherIndex] && players[otherIndex].shape ? players[otherIndex].shape : null;
 
       Array.from(pickBtns.children).forEach(btn => {
         const shape = btn.getAttribute('data-shape');
@@ -476,8 +478,9 @@
       db.ref(`rooms/${ROOM_ID}/players`).on('value', snap => {
         const players = getPlayers(snap);
         updateShapeButtons(players);
-        let other = playerId === 'player1' ? 'player2' : 'player1';
-        let otherPlayer = players.find(p => p.id === other);
+        const myIndex = players.findIndex(p => p.id === playerId);
+        const otherIndex = myIndex === 0 ? 1 : 0;
+        let otherPlayer = players[otherIndex];
         if (otherPlayer && otherPlayer.shape) {
           opponentShape = otherPlayer.shape;
           // Set turn if not set
@@ -517,7 +520,7 @@
       // Only used for instant UI feedback
       let players = [];
       if (playerId && selectedShape) {
-        players.push({ id: playerId, shape: selectedShape, connected: true });
+        players.push({ id: playerId, shape: selectedShape, connected: true, joined: Date.now() });
       }
       return players;
     }
@@ -527,11 +530,11 @@
       unsubscribe = db.ref('rooms/' + ROOM_ID).on('value', snap => {
         const data = snap.val();
         if (!data) return;
-        renderBoard(data.board, data.turn, data.winner);
+        renderBoard(data.board, data.turn, data.winner, data.players);
       });
       subscribeToChat();
     }
-    function renderBoard(board, turn, winner) {
+    function renderBoard(board, turn, winner, playersObj) {
       boardEl.innerHTML = '';
       for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
@@ -542,7 +545,7 @@
         cell.dataset.index = i;
         cell.innerHTML = shapeObj ? shapeObj.icon : '';
         if (!winner && turn === playerShape && !board[i]) {
-          cell.addEventListener('click', () => makeMove(i, board));
+          cell.addEventListener('click', () => makeMove(i, board, playersObj));
         }
         boardEl.appendChild(cell);
       }
@@ -559,7 +562,7 @@
         statusEl.innerHTML = `Player <span id="current-player">${turn}</span>'s turn`;
       }
     }
-    async function makeMove(idx, board) {
+    async function makeMove(idx, board, playersObj) {
       // Only allow if it's your turn and cell is empty
       const snap = await db.ref('rooms/' + ROOM_ID).get();
       const data = snap.val();
@@ -568,7 +571,14 @@
       playMoveSound();
       // Check winner
       const winner = checkWinner(board);
-      let nextTurn = (playerShape === data.players.player1.shape) ? data.players.player2.shape : data.players.player1.shape;
+      // Find opponent's shape
+      const players = Object.entries(playersObj || {})
+        .filter(([id, p]) => p && p.connected)
+        .sort((a, b) => a[1].joined - b[1].joined)
+        .map(([id, p]) => ({ id, ...p }));
+      const myIndex = players.findIndex(p => p.id === playerId);
+      const otherIndex = myIndex === 0 ? 1 : 0;
+      let nextTurn = players[otherIndex] && players[otherIndex].shape ? players[otherIndex].shape : null;
       await db.ref('rooms/' + ROOM_ID).update({
         board,
         turn: winner ? null : nextTurn,
@@ -596,7 +606,7 @@
       if (playerRef) {
         await playerRef.remove();
       }
-      playerId = null;
+      playerId = generatePlayerId();
       playerShape = null;
       opponentShape = null;
       unsubscribe && db.ref('rooms/' + ROOM_ID).off();
