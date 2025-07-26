@@ -290,20 +290,28 @@
           <form id="name-form" autocomplete="off" class="mb-3">
             <div class="mb-3 d-flex justify-content-center gap-2" id="profile-pic-row">
               <label>
-                <input type="radio" name="profile-pic" value="1" class="d-none" checked>
-                <span class="profile-pic-circle" style="background:#ffb74d;">1</span>
+                <input type="radio" name="profile-pic" value="chaeryeong.jpg" class="d-none">
+                <span class="profile-pic-circle" style="background:#fff; padding:0;">
+                  <img src="chaeryeong.jpg" alt="profile">
+                </span>
               </label>
               <label>
-                <input type="radio" name="profile-pic" value="2" class="d-none">
-                <span class="profile-pic-circle" style="background:#64b5f6;">2</span>
+                <input type="radio" name="profile-pic" value="yeji.jpg" class="d-none">
+                <span class="profile-pic-circle" style="background:#fff; padding:0;">
+                  <img src="yeji.jpg" alt="profile">
+                </span>
               </label>
               <label>
-                <input type="radio" name="profile-pic" value="3" class="d-none">
-                <span class="profile-pic-circle" style="background:#81c784;">3</span>
+                <input type="radio" name="profile-pic" value="lia.jpg" class="d-none">
+                <span class="profile-pic-circle" style="background:#fff; padding:0;">
+                  <img src="lia.jpg" alt="profile">
+                </span>
               </label>
               <label>
                 <input type="radio" name="profile-pic" value="yuna.jpg" class="d-none">
-                <span class="yuna.jpg" style="background:#e57373;">4</span>
+                <span class="profile-pic-circle" style="background:#fff; padding:0;">
+                  <img src="yuna.jpg" alt="profile">
+                </span>
               </label>
               <label>
                 <input type="radio" name="profile-pic" value="ryujin.jpg" class="d-none">
@@ -738,6 +746,18 @@
       }else  if (profilePic === "yuna.jpg") {
         return `<span class="profile-pic-chat" style="background:#fff; padding:0;">
           <img src="yuna.jpg" alt="profile">
+        </span>`;
+      }else  if (profilePic === "lia.jpg") {
+        return `<span class="profile-pic-chat" style="background:#fff; padding:0;">
+          <img src="lia.jpg" alt="profile">
+        </span>`;
+      }else  if (profilePic === "yeji.jpg") {
+        return `<span class="profile-pic-chat" style="background:#fff; padding:0;">
+          <img src="yeji.jpg" alt="profile">
+        </span>`;
+      }else{
+        return `<span class="profile-pic-chat" style="background:#fff; padding:0;">
+          <img src="chaeryeong.jpg" alt="profile">
         </span>`;
       }
       const color = profilePicColors[profilePic] || "#ba68c8";
