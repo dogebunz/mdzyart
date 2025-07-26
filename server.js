@@ -1,14 +1,3 @@
-let onlineCount = 0;
-
-io.on('connection', (socket) => {
-  onlineCount++;
-  io.emit('viewerCount', onlineCount);
-
-  socket.on('disconnect', () => {
-    onlineCount = Math.max(0, onlineCount - 1);
-    io.emit('viewerCount', onlineCount);
-  });
-
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -98,8 +87,17 @@ const io = new Server(server, {
 
 const userNames = {};
 const canvasHistory = {}; // { roomName: [ {from, to, color, size, isEraser}, ... ] }
+let onlineCount = 0;
 
 io.on('connection', (socket) => {
+  onlineCount++;
+  io.emit('viewerCount', onlineCount);
+
+  socket.on('disconnect', () => {
+    onlineCount = Math.max(0, onlineCount - 1);
+    io.emit('viewerCount', onlineCount);
+  });
+  
   socket.currentRoom = null;
 
   // --- Join Room with Name ---
@@ -186,5 +184,3 @@ app.post('/star', (req, res) => {
 // --- Start the server (MUST use server.listen, not app.listen) ---
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log('Server running on port', PORT));
-
-});
