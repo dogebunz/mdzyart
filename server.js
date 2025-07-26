@@ -31,6 +31,24 @@ const io = new Server(server, {
 const userNames = {};
 const canvasHistory = {}; // { roomName: [ {from, to, color, size, isEraser}, ... ] }
 
+// --- In-memory uploads gallery (for Render) ---
+let uploads = [];
+
+app.use(express.json({ limit: '10mb' }));
+
+// --- Upload endpoint ---
+app.post('/upload', (req, res) => {
+  const { image, name, time } = req.body;
+  if (!image || !name) return res.status(400).send('Missing data');
+  uploads.push({ image, name, time });
+  res.sendStatus(200);
+});
+
+// --- Gallery endpoint ---
+app.get('/gallery', (req, res) => {
+  res.json(uploads);
+});
+
 io.on('connection', (socket) => {
   socket.currentRoom = null;
 
