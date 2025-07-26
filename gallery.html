@@ -67,10 +67,10 @@
         data.forEach(item => {
           const div = document.createElement('div');
           div.className = 'gallery-item';
-          div.title = item.name.replace(/_/g, ' ').replace(/\.(png|jpg)$/i, '');
+          div.title =  item.name.replace(/_/g, ' ').replace(/\.(png|jpg)$/i, '');
           div.innerHTML = `
             <img src="${item.download_url}" alt="drawing">
-            <div class="gallery-meta">${item.name.replace(/_/g, ' ').replace(/\.(png|jpg)$/i, '')}</div>
+            <div class="gallery-meta"> "artwork by:" + ${item.name.replace(/_/g, ' ').replace(/\.(png|jpg)$/i, '')}</div>
           `;
           div.onclick = () => {
             document.getElementById('modalImg').src = item.download_url;
