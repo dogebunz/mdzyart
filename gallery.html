@@ -55,6 +55,30 @@
       font-weight: 600;
       letter-spacing: 1px;
       border-radius: 0 0 1rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .star-btn {
+      border-radius: 1rem !important;
+      font-weight: 600;
+      box-shadow: none;
+      border: none;
+      background: #ffe082;
+      color: #b28704;
+      letter-spacing: 1px;
+      transition: background 0.2s, color 0.2s;
+      padding: 2px 10px;
+      font-size: 1rem;
+      pointer-events: auto;
+      display: flex;
+      align-items: center;
+      gap: 2px;
+    }
+    .star-btn:active, .star-btn.selected {
+      background: #ffd54f;
+      color: #ff9800;
     }
     .modal-img {
       width: 100%;
@@ -74,11 +98,11 @@
       color: #fff;
       letter-spacing: 1px;
       transition: background 0.2s, color 0.2s;
+      font-size: 1rem;
+      padding: 8px 16px;
     }
-    .btn-cute:hover {
-      background: #1565c0;
-      color: #fff;
-    }
+    .btn-cute.btn-sm { font-size: 0.95rem; padding: 6px 12px; }
+    .btn-cute:hover { background: #1565c0; color: #fff; }
     @media (max-width: 600px) {
       .gallery-item { width: 120px; height: 120px; }
       .gallery-title { font-size: 1.5rem; }
@@ -112,43 +136,81 @@
     const GITHUB_USER = 'dogebunz';
     const GITHUB_REPO = 'mdzyart';
     const GITHUB_BRANCH = 'main';
+    const BACKEND_URL = 'https://mdzyart.onrender.com'; // <-- CHANGE if needed
 
-    let lastDownloadUrl = "";
+    let starData = {};
 
-    fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/gallery?ref=${GITHUB_BRANCH}`)
+    // Fetch star counts first, then render gallery
+    fetch(`${BACKEND_URL}/stars`)
       .then(res => res.json())
       .then(data => {
-        const gallery = document.getElementById('gallery');
-        // Only show image files, newest first
-        data = data.filter(item =>
-          item.type === 'file' && (item.name.endsWith('.png') || item.name.endsWith('.jpg'))
-        ).reverse();
+        starData = data;
+        renderGallery();
+      })
+      .catch(() => renderGallery()); // fallback if stars endpoint fails
 
-        data.forEach(item => {
-          // Extract artist name from filename: 1234567890_artistname.jpg
-          const nameParts = item.name.split('_');
-          const artistWithExt = nameParts.slice(1).join('_');
-          const artist = artistWithExt.replace(/\.(png|jpg)$/i, '');
+    function renderGallery() {
+      fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/gallery?ref=${GITHUB_BRANCH}`)
+        .then(res => res.json())
+        .then(data => {
+          const gallery = document.getElementById('gallery');
+          gallery.innerHTML = '';
+          // Only show image files, newest first
+          data = data.filter(item =>
+            item.type === 'file' && (item.name.endsWith('.png') || item.name.endsWith('.jpg'))
+          ).reverse();
 
-          const div = document.createElement('div');
-          div.className = 'gallery-item';
-          div.title = `artwork by: ${artist}`;
-          div.innerHTML = `
-            <img src="${item.download_url}" alt="drawing">
-            <div class="gallery-meta">artwork by: ${artist}</div>
-          `;
-          div.onclick = () => {
-            document.getElementById('modalImg').src = item.download_url;
-            // Set download button
-            const downloadBtn = document.getElementById('downloadBtn');
-            downloadBtn.href = item.download_url;
-            downloadBtn.setAttribute('download', item.name);
-            lastDownloadUrl = item.download_url;
-            new bootstrap.Modal(document.getElementById('imgModal')).show();
-          };
-          gallery.appendChild(div);
+          data.forEach(item => {
+            // Extract artist name from filename: 1234567890_artistname.jpg
+            const nameParts = item.name.split('_');
+            const artistWithExt = nameParts.slice(1).join('_');
+            const artist = artistWithExt.replace(/\.(png|jpg)$/i, '');
+            const filename = item.name;
+            const starCount = starData[filename] || 0;
+
+            const div = document.createElement('div');
+            div.className = 'gallery-item';
+            div.title = `artwork by: ${artist}`;
+            div.innerHTML = `
+              <img src="${item.download_url}" alt="drawing">
+              <div class="gallery-meta">
+                artwork by: ${artist}
+                <button class="star-btn btn-sm" data-filename="${filename}" title="Star this artwork">
+                  ⭐ <span class="star-count">${starCount}</span>
+                </button>
+              </div>
+            `;
+            div.onclick = () => {
+              document.getElementById('modalImg').src = item.download_url;
+              // Set download button
+              const downloadBtn = document.getElementById('downloadBtn');
+              downloadBtn.href = item.download_url;
+              downloadBtn.setAttribute('download', item.name);
+              new bootstrap.Modal(document.getElementById('imgModal')).show();
+            };
+            gallery.appendChild(div);
+          });
+
+          // Add event listeners for star buttons
+          document.querySelectorAll('.star-btn').forEach(btn => {
+            btn.onclick = function(e) {
+              e.stopPropagation();
+              const filename = btn.getAttribute('data-filename');
+              fetch(`${BACKEND_URL}/star`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ filename })
+              })
+              .then(res => res.json())
+              .then(data => {
+                btn.querySelector('.star-count').textContent = data.stars;
+                btn.classList.add('selected');
+                setTimeout(() => btn.classList.remove('selected'), 500);
+              });
+            };
+          });
         });
-      });
+    }
 
     // Optional: For browsers that don't support <a download> for cross-origin, fallback to opening in new tab
     document.getElementById('downloadBtn').onclick = function(e) {
