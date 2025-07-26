@@ -7,13 +7,27 @@
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@700&display=swap" rel="stylesheet">
   <style>
-    body { background: linear-gradient(135deg, #e3f0ff 0%, #b3e0ff 100%); font-family: 'Baloo 2', cursive, sans-serif; }
-    .gallery-title { font-size: 2.5rem; color: #1976d2; text-align: center; margin: 32px 0 24px 0; }
-    .gallery-grid { display: flex; flex-wrap: wrap; gap: 24px; justify-content: center; }
+    body {
+      background: linear-gradient(135deg, #e3f0ff 0%, #b3e0ff 100%);
+      font-family: 'Baloo 2', cursive, sans-serif;
+    }
+    .gallery-title {
+      font-size: 2.5rem;
+      color: #1976d2;
+      text-align: center;
+      margin: 32px 0 24px 0;
+      letter-spacing: 2px;
+      font-weight: 700;
+    }
+    .gallery-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      justify-content: center;
+    }
     .gallery-item {
       width: 200px; height: 200px;
       background: #fff;
-      border-radius: 16px;
       box-shadow: 0 2px 8px #b3e0ff44;
       overflow: hidden;
       display: flex;
@@ -26,18 +40,31 @@
     .gallery-item:hover { box-shadow: 0 4px 16px #1976d244; }
     .gallery-item img {
       width: 100%; height: 100%; object-fit: cover;
-      border-radius: 12px;
       transition: transform 0.2s;
+      display: block;
     }
     .gallery-meta {
       position: absolute; bottom: 8px; left: 0; right: 0;
       background: rgba(255,255,255,0.7);
       color: #1976d2; font-size: 1rem; text-align: center;
-      padding: 2px 0; border-radius: 0 0 12px 12px;
+      padding: 2px 0;
       pointer-events: none;
+      font-family: 'Baloo 2', cursive, sans-serif;
+      font-weight: 600;
+      letter-spacing: 1px;
     }
-    /* Modal styles */
-    .modal-img { width: 100%; max-width: 90vw; max-height: 80vh; display: block; margin: 0 auto; }
+    .modal-img {
+      width: 100%;
+      max-width: 90vw;
+      max-height: 80vh;
+      display: block;
+      margin: 0 auto;
+      background: #fff;
+    }
+    @media (max-width: 600px) {
+      .gallery-item { width: 120px; height: 120px; }
+      .gallery-title { font-size: 1.5rem; }
+    }
   </style>
 </head>
 <body>
@@ -57,20 +84,32 @@
 
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
   <script>
-    // Fetch images from GitHub gallery folder
-    fetch('https://api.github.com/repos/dogebunz/mdzyart/contents/gallery?ref=main')
+    // CHANGE these if your repo/branch is different
+    const GITHUB_USER = 'dogebunz';
+    const GITHUB_REPO = 'mdzyart';
+    const GITHUB_BRANCH = 'main';
+
+    fetch(`https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/gallery?ref=${GITHUB_BRANCH}`)
       .then(res => res.json())
       .then(data => {
         const gallery = document.getElementById('gallery');
-        // Sort newest first
-        data = data.filter(item => item.type === 'file' && item.name.endsWith('.png') || item.name.endsWith('.jpg')).reverse();
+        // Only show image files, newest first
+        data = data.filter(item =>
+          item.type === 'file' && (item.name.endsWith('.png') || item.name.endsWith('.jpg'))
+        ).reverse();
+
         data.forEach(item => {
+          // Extract artist name from filename: 1234567890_artistname.jpg
+          const nameParts = item.name.split('_');
+          const artistWithExt = nameParts.slice(1).join('_');
+          const artist = artistWithExt.replace(/\.(png|jpg)$/i, '');
+
           const div = document.createElement('div');
           div.className = 'gallery-item';
-          div.title =  item.name.replace(/_/g, ' ').replace(/\.(png|jpg)$/i, '');
+          div.title = `artwork by: ${artist}`;
           div.innerHTML = `
             <img src="${item.download_url}" alt="drawing">
-            <div class="gallery-meta"> artwork by: ${item.name.split('_').slice(1).join('_').replace(/\.(png|jpg)$/i, '')}</div>
+            <div class="gallery-meta">artwork by: ${artist}</div>
           `;
           div.onclick = () => {
             document.getElementById('modalImg').src = item.download_url;
