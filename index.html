@@ -43,45 +43,59 @@
       0%, 100% { transform: translateY(0);}
       50% { transform: translateY(12px);}
     }
-    .btn-cute {
-      background: #7ecbff;
-      color: #1976d2;
-      border-radius: 24px;
+    /* Flat, square, bold buttons */
+    .btn, .btn-cute, .btn-primary, .btn-success, .btn-light {
+      border-radius: 0 !important;
       font-weight: 600;
-      font-size: 1.2rem;
+      box-shadow: none;
       border: none;
-      box-shadow: 0 2px 8px #b3e0ff88;
-      transition: background 0.2s;
+      letter-spacing: 1px;
+      padding: 10px 18px;
+      transition: background 0.2s, color 0.2s;
     }
-    .btn-cute:hover, .btn-cute:focus {
+    .btn-cute, .btn-primary, .btn-success {
+      background: #1976d2;
+      color: #fff;
+    }
+    .btn-cute:hover, .btn-primary:hover, .btn-success:hover {
+      background: #1565c0;
+      color: #fff;
+    }
+    .btn-light {
+      background: #e3f0ff;
+      color: #1976d2;
+    }
+    .btn-light:hover {
       background: #b3e0ff;
       color: #1976d2;
     }
+    #main-card, #canvas, #canvas-container {
+      border-radius: 0 !important;
+    }
     #main-card {
       background: #fff;
-      border-radius: 24px;
       box-shadow: 0 8px 32px rgba(60,60,120,0.12);
       padding: 32px 8px;
       margin: 40px auto 0 auto;
       max-width: 960px;
+      border-radius: 0 !important;
     }
     #canvas-container {
       background: #f5f7fa;
-      border-radius: 16px;
       box-shadow: 0 2px 8px #b3e0ff44;
       padding: 8px;
       margin-bottom: 20px;
       overflow: hidden;
+      border-radius: 0 !important;
     }
     pinch-zoom {
       display: block;
       width: 100%;
       height: 100%;
-      border-radius: 12px;
+      border-radius: 0 !important;
     }
     #canvas {
       background: #fff;
-      border-radius: 10px;
       touch-action: none;
       width: 100%;
       max-width: 900px;
@@ -90,11 +104,12 @@
       margin: 0 auto;
       border: 2px solid #7ecbff;
       box-shadow: 0 2px 8px #b3e0ff44;
+      border-radius: 0 !important;
     }
     .color-btn {
       width: 36px;
       height: 36px;
-      border-radius: 50%;
+      border-radius: 0 !important;
       border: 2px solid #fff;
       margin-right: 6px;
       margin-left: 0;
@@ -109,7 +124,7 @@
       width: 36px;
       height: 36px;
       border: none;
-      border-radius: 50%;
+      border-radius: 0 !important;
       margin-left: 6px;
       box-shadow: 0 1px 4px #b3e0ff44;
       padding: 0;
@@ -121,6 +136,7 @@
       font-size: 1.1rem;
       margin-right: 2px;
       margin-left: 2px;
+      border-radius: 0 !important;
       transition: border 0.2s, background 0.2s;
     }
     .brush-btn.selected {
@@ -146,7 +162,7 @@
     #chat-box {
       background: #e3f2fd;
       color: #222;
-      border-radius: 10px;
+      border-radius: 0 !important;
       max-height: 200px;
       overflow-y: auto;
       padding: 10px;
@@ -158,54 +174,6 @@
       gap: 8px;
       justify-content: center;
       margin-bottom: 10px;
-    }
-    #clear-btn, #leave-btn, #music-toggle, #download-btn, #upload-btn {
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 1.1rem;
-      border: none;
-      box-shadow: 0 2px 8px #b3e0ff44;
-      margin-right: 8px;
-    }
-    #clear-btn {
-      background: #ffe082;
-      color: #b28704;
-    }
-    #clear-btn:hover, #clear-btn:focus {
-      background: #fff8e1;
-      color: #b28704;
-    }
-    #download-btn {
-      background: #b3e0ff;
-      color: #1976d2;
-    }
-    #download-btn:hover, #download-btn:focus {
-      background: #e3f0ff;
-      color: #1976d2;
-    }
-    #upload-btn {
-      background: #7ecbff;
-      color: #1976d2;
-    }
-    #upload-btn:hover, #upload-btn:focus {
-      background: #b3e0ff;
-      color: #1976d2;
-    }
-    #leave-btn {
-      background: #ffb3b3;
-      color: #d32f2f;
-    }
-    #leave-btn:hover, #leave-btn:focus {
-      background: #ffeaea;
-      color: #d32f2f;
-    }
-    #music-toggle {
-      background: #b3e0ff;
-      color: #1976d2;
-    }
-    #music-toggle:hover, #music-toggle:focus {
-      background: #e3f0ff;
-      color: #1976d2;
     }
     .gallery-link {
       color: #1976d2;
@@ -262,7 +230,7 @@
   <!-- Welcome Modal -->
   <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog modal-dialog-centered">
-      <div class="modal-content" style="border-radius: 24px;">
+      <div class="modal-content" style="border-radius:0;">
         <div class="modal-body text-center py-5">
           <h1 class="cute-title mb-4">Let's draw!</h1>
           <div class="arrow mb-4">
@@ -282,11 +250,11 @@
     <div id="main-card">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-          <button id="leave-btn" class="btn" style="display:inline-block;">Leave</button>
+          <button id="leave-btn" class="btn btn-cute" style="display:inline-block;">Leave</button>
           <a href="gallery.html" class="gallery-link" target="_blank">🎨 View Gallery</a>
         </div>
         <div>
-          <button id="music-toggle" class="btn" title="Toggle music">🔊</button>
+          <button id="music-toggle" class="btn btn-cute" title="Toggle music">🔊</button>
         </div>
       </div>
       <div class="toolbar-row" id="toolbar-row">
@@ -301,14 +269,14 @@
         </div>
         <div class="toolbar-group">
           <span style="font-size:1.1rem;">🖌️</span>
-          <button class="brush-btn btn btn-light" data-size="2" style="width:28px;height:28px;border-radius:50%;">•</button>
-          <button class="brush-btn btn btn-light" data-size="5" style="width:32px;height:32px;border-radius:50%;">••</button>
-          <button class="brush-btn btn btn-light" data-size="10" style="width:36px;height:36px;border-radius:50%;">•••</button>
+          <button class="brush-btn btn btn-light" data-size="2" style="width:28px;height:28px;">•</button>
+          <button class="brush-btn btn btn-light" data-size="5" style="width:32px;height:32px;">••</button>
+          <button class="brush-btn btn btn-light" data-size="10" style="width:36px;height:36px;">•••</button>
           <input type="range" id="brush-slider" min="1" max="30" value="3" style="width:80px;">
           <span id="brush-size-label" style="font-size:1.1rem;">3px</span>
         </div>
         <div class="toolbar-group">
-          <button id="clear-btn" class="btn">Clear</button>
+          <button id="clear-btn" class="btn btn-cute">Clear</button>
           <button id="download-btn" class="btn btn-success">⬇️ Download JPG</button>
           <button id="upload-btn" class="btn btn-primary">⬆️ Upload</button>
         </div>
