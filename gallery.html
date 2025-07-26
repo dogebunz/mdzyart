@@ -11,17 +11,13 @@
       background: linear-gradient(135deg, #e3f0ff 0%, #b3e0ff 100%);
       font-family: 'Baloo 2', cursive, sans-serif;
     }
-
-    gallery-title {
-      font-family: 'Baloo 2', cursive, sans-serif;
+    .gallery-title {
       font-size: 2.5rem;
       color: #1976d2;
+      text-align: center;
+      margin: 32px 0 24px 0;
       letter-spacing: 2px;
-      text-shadow: 0 2px 8px #fff8;
-      margin-top: 24px;
-      margin-bottom: 12px;
-      user-select: none;
-      pointer-events: none;
+      font-weight: 700;
     }
     .gallery-grid {
       display: flex;
@@ -109,7 +105,6 @@
     .btn-cute:hover { background: #1565c0; color: #fff; }
     @media (max-width: 600px) {
       .gallery-item { width: 120px; height: 120px; }
-      .gallery-title { font-size: 2rem; }
       .gallery-title { font-size: 1.5rem; }
     }
   </style>
@@ -117,7 +112,7 @@
 <body>
   <div class="d-flex align-items-center justify-content-start mb-3" style="max-width:900px;margin:0 auto;">
     <a href="index.html" class="btn btn-cute btn-sm" style="margin-right:12px;">← Back</a>
-    <div class="gallery-title flex-grow-1">MDZY ART GALLERY</div>
+    <div class="gallery-title flex-grow-1">mdzy art gallery</div>
   </div>
   <div id="gallery" class="gallery-grid"></div>
 
