@@ -43,7 +43,6 @@
       0%, 100% { transform: translateY(0);}
       50% { transform: translateY(12px);}
     }
-    /* Rounded, bold, small buttons */
     .btn, .btn-cute, .btn-primary, .btn-success, .btn-light {
       border-radius: 1rem !important;
       font-weight: 600;
@@ -208,6 +207,42 @@
       justify-content: center;
       margin-bottom: 4px;
     }
+    /* Profile pic circles */
+    .profile-pic-circle {
+      display: inline-block;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 36px;
+      font-weight: bold;
+      color: #fff;
+      font-size: 1.2rem;
+      border: 2px solid #fff;
+      cursor: pointer;
+      transition: border 0.2s;
+      box-shadow: 0 1px 4px #b3e0ff44;
+      user-select: none;
+    }
+    input[name="profile-pic"]:checked + .profile-pic-circle {
+      border: 2px solid #1976d2;
+      box-shadow: 0 2px 8px #1976d244;
+    }
+    .profile-pic-chat {
+      display: inline-block;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      text-align: center;
+      line-height: 22px;
+      font-weight: bold;
+      color: #fff;
+      font-size: 0.9rem;
+      border: 2px solid #fff;
+      margin-right: 6px;
+      vertical-align: middle;
+      user-select: none;
+    }
     @media (max-width: 900px) {
       #canvas { height: 300px; }
     }
@@ -217,7 +252,6 @@
       .cute-title { font-size: 2rem; }
       .cute-app-title { font-size: 1.5rem; }
       .toolbar-row { flex-direction: column; gap: 4px; }
-      .cute-app-title2 { font-size: 0.5rem; }
       .toolbar-group { flex-wrap: wrap; gap: 6px; }
       #toolbar-row button,
       #toolbar-row input[type="color"],
@@ -234,8 +268,7 @@
 </head>
 <body>
   <!-- Cute App Title -->
-  <div class="cute-app-title text-center my-3">MDZY ART PLACE </div>
-  <div class="cute-app-title2 text-center my-3">made with love @mdzy_cart :) </div>
+  <div class="cute-app-title text-center my-3">mdzy art place</div>
 
   <!-- Welcome Modal -->
   <div class="modal fade" id="welcomeModal" tabindex="-1" aria-labelledby="welcomeModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
@@ -247,6 +280,28 @@
             <svg width="40" height="40" viewBox="0 0 24 24"><path fill="#1976d2" d="M12 16.5l-8-8 1.41-1.42L12 13.67l6.59-6.59L20 8.5z"/></svg>
           </div>
           <form id="name-form" autocomplete="off" class="mb-3">
+            <div class="mb-3 d-flex justify-content-center gap-2" id="profile-pic-row">
+              <label>
+                <input type="radio" name="profile-pic" value="1" class="d-none" checked>
+                <span class="profile-pic-circle" style="background:#ffb74d;">1</span>
+              </label>
+              <label>
+                <input type="radio" name="profile-pic" value="2" class="d-none">
+                <span class="profile-pic-circle" style="background:#64b5f6;">2</span>
+              </label>
+              <label>
+                <input type="radio" name="profile-pic" value="3" class="d-none">
+                <span class="profile-pic-circle" style="background:#81c784;">3</span>
+              </label>
+              <label>
+                <input type="radio" name="profile-pic" value="4" class="d-none">
+                <span class="profile-pic-circle" style="background:#e57373;">4</span>
+              </label>
+              <label>
+                <input type="radio" name="profile-pic" value="5" class="d-none">
+                <span class="profile-pic-circle" style="background:#ba68c8;">5</span>
+              </label>
+            </div>
             <input type="text" id="user-name" class="form-control mb-3" placeholder="Enter your name" maxlength="16" required style="max-width:220px;display:inline-block;">
             <button id="join-btn" class="btn btn-cute btn-sm px-5 py-2" type="submit">Join</button>
           </form>
@@ -327,6 +382,7 @@
     let joined = false;
     let currentRoom = 'default';
     let userName = '';
+    let userProfilePic = "1";
 
     // Name form logic
     const nameForm = document.getElementById('name-form');
@@ -334,6 +390,7 @@
     nameForm.onsubmit = (e) => {
       e.preventDefault();
       const name = userNameInput.value.trim();
+      userProfilePic = document.querySelector('input[name="profile-pic"]:checked').value;
       if (!name) {
         userNameInput.classList.add('is-invalid');
         userNameInput.focus();
@@ -343,8 +400,7 @@
       userName = name;
       joined = true;
       welcomeModal.hide();
-      // Send name to backend when joining
-      socket.emit('joinRoom', { room: currentRoom, name: userName });
+      socket.emit('joinRoom', { room: currentRoom, name: userName, profilePic: userProfilePic });
     };
 
     document.getElementById('leave-btn').onclick = () => {
@@ -358,7 +414,6 @@
     const musicToggle = document.getElementById('music-toggle');
     music.volume = 0.5;
     let musicOn = false;
-    // Autoplay may be blocked until user interacts
     nameForm.addEventListener('submit', () => {
       setTimeout(() => {
         if (!musicOn) {
@@ -406,10 +461,8 @@
       document.getElementById('eraser-btn').classList.remove('selected');
       document.getElementById('bucket-btn').classList.remove('selected');
     };
-    // Set initial color
     selectColor('#1976d2');
 
-    // Eraser button
     document.getElementById('eraser-btn').onclick = () => {
       isEraser = !isEraser;
       isBucket = false;
@@ -420,7 +473,6 @@
       }
     };
 
-    // Paint bucket button
     document.getElementById('bucket-btn').onclick = () => {
       isBucket = !isBucket;
       isEraser = false;
@@ -449,7 +501,6 @@
       document.getElementById('brush-size-label').textContent = currentBrushSize + 'px';
       document.querySelectorAll('.brush-btn').forEach(btn => btn.classList.remove('selected'));
     };
-    // Set initial brush size
     selectBrush(3);
 
     // === Canvas Drawing & Paint Bucket ===
@@ -661,9 +712,20 @@
       chatBox.scrollTop = chatBox.scrollHeight;
     }
 
-    socket.on('chat', ({ id, message, name }) => {
+    // Profile pic color map
+    const profilePicColors = {
+      "1": "#ffb74d",
+      "2": "#64b5f6",
+      "3": "#81c784",
+      "4": "#e57373",
+      "5": "#ba68c8"
+    };
+
+    socket.on('chat', ({ id, message, name, profilePic }) => {
+      const color = profilePicColors[profilePic] || "#bdbdbd";
+      const picCircle = `<span class="profile-pic-chat" style="background:${color};">${profilePic || "?"}</span>`;
       const displayName = name ? `<span style="color:#1976d2;font-weight:600;">${name}</span>` : `<b>${id}</b>`;
-      addMessage(`${displayName}: ${message}`);
+      addMessage(`${picCircle}${displayName}: ${message}`);
     });
     socket.on('system', msg => addMessage(`<span style="color:#1976d2">${msg}</span>`, true));
 
@@ -672,7 +734,7 @@
       if (!currentRoom) return;
       const msg = chatInput.value.trim();
       if (!msg) return;
-      socket.emit('chat', { room: currentRoom, message: msg, name: userName });
+      socket.emit('chat', { room: currentRoom, message: msg, name: userName, profilePic: userProfilePic });
       chatInput.value = '';
     };
 
