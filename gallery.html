@@ -175,11 +175,12 @@
               <img src="${item.download_url}" alt="drawing">
               <div class="gallery-meta">
                 artwork by: ${artist}
-                //<button class="star-btn btn-sm" data-filename="${filename}" title="Star this artwork">
-                  //⭐ <span class="star-count">${starCount}</span>
-                //</button>
               </div>
             `;
+
+            //<button class="star-btn btn-sm" data-filename="${filename}" title="Star this artwork">
+                 // ⭐ <span class="star-count">${starCount}</span>
+               // </button>
             div.onclick = () => {
               document.getElementById('modalImg').src = item.download_url;
               // Set download button
