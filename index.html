@@ -11,34 +11,224 @@
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@700&family=Baloo+2:wght@700&display=swap" rel="stylesheet">
   <style>
-    .profile-pic-circle {
-      display: inline-block;
+    body {
+      background: linear-gradient(135deg, #e3f0ff 0%, #b3e0ff 100%);
+      font-family: 'Quicksand', 'Comic Sans MS', cursive, sans-serif;
+      color: #1976d2;
+      min-height: 100vh;
+    }
+    .cute-app-title {
+      font-family: 'Baloo 2', cursive, sans-serif;
+      font-size: 2.5rem;
+      color: #1976d2;
+      letter-spacing: 2px;
+      text-shadow: 0 2px 8px #fff8;
+      margin-top: 24px;
+      margin-bottom: 12px;
+      user-select: none;
+      pointer-events: none;
+    }
+    .cute-title {
+      font-size: 3rem;
+      font-weight: 700;
+      letter-spacing: 2px;
+      color: #1976d2;
+      text-shadow: 0 2px 8px #fff8;
+      font-family: 'Baloo 2', cursive, sans-serif;
+    }
+    .arrow {
+      animation: bounce 1.2s infinite;
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0);}
+      50% { transform: translateY(12px);}
+    }
+    /* Rounded, bold, small buttons */
+    .btn, .btn-cute, .btn-primary, .btn-success, .btn-light {
+      border-radius: 1rem !important;
+      font-weight: 600;
+      box-shadow: none;
+      border: none;
+      letter-spacing: 1px;
+      padding: 8px 16px;
+      transition: background 0.2s, color 0.2s;
+      font-size: 1rem;
+    }
+    .btn-sm, .btn-cute.btn-sm, .btn-primary.btn-sm, .btn-success.btn-sm, .btn-light.btn-sm {
+      font-size: 0.95rem;
+      padding: 6px 12px;
+    }
+    .btn-cute, .btn-primary, .btn-success {
+      background: #1976d2;
+      color: #fff;
+    }
+    .btn-cute:hover, .btn-primary:hover, .btn-success:hover {
+      background: #1565c0;
+      color: #fff;
+    }
+    .btn-light {
+      background: #e3f0ff;
+      color: #1976d2;
+    }
+    .btn-light:hover {
+      background: #b3e0ff;
+      color: #1976d2;
+    }
+    #main-card, #canvas, #canvas-container {
+      border-radius: 1rem !important;
+    }
+    #main-card {
+      background: #fff;
+      box-shadow: 0 8px 32px rgba(60,60,120,0.12);
+      padding: 32px 8px;
+      margin: 40px auto 0 auto;
+      max-width: 960px;
+    }
+    #canvas-container {
+      background: #f5f7fa;
+      box-shadow: 0 2px 8px #b3e0ff44;
+      padding: 8px;
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+    pinch-zoom {
+      display: block;
+      width: 100%;
+      height: 100%;
+      border-radius: 1rem !important;
+    }
+    #canvas {
+      background: #fff;
+      touch-action: none;
+      width: 100%;
+      max-width: 900px;
+      height: 500px;
+      display: block;
+      margin: 0 auto;
+      border: 2px solid #7ecbff;
+      box-shadow: 0 2px 8px #b3e0ff44;
+      border-radius: 1rem !important;
+    }
+    .color-btn {
       width: 36px;
       height: 36px;
-      border-radius: 50%;
-      overflow: hidden;
+      border-radius: 1rem !important;
       border: 2px solid #fff;
-      cursor: pointer;
+      margin-right: 6px;
+      margin-left: 0;
       box-shadow: 0 1px 4px #b3e0ff44;
       transition: border 0.2s;
     }
-    .profile-pic-circle.selected, input[name="profile-pic"]:checked + .profile-pic-circle {
+    .color-btn.selected {
       border: 2px solid #1976d2;
       box-shadow: 0 2px 8px #1976d244;
     }
-    .profile-pic-chat {
-      display: inline-block;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      overflow: hidden;
-      border: 2px solid #fff;
-      margin-right: 6px;
-      vertical-align: middle;
-      background: #fff;
+    #custom-color {
+      width: 36px;
+      height: 36px;
+      border: none;
+      border-radius: 1rem !important;
+      margin-left: 6px;
+      box-shadow: 0 1px 4px #b3e0ff44;
+      padding: 0;
     }
-    .profile-pic-chat img, .profile-pic-circle img {
-      width: 100%; height: 100%; object-fit: cover; display: block;
+    .brush-btn {
+      border: 2px solid #b3e0ff;
+      background: #fff;
+      color: #1976d2;
+      font-size: 1.1rem;
+      margin-right: 2px;
+      margin-left: 2px;
+      border-radius: 1rem !important;
+      transition: border 0.2s, background 0.2s;
+    }
+    .brush-btn.selected {
+      border: 2px solid #1976d2;
+      background: #e3f0ff;
+    }
+    #eraser-btn.selected {
+      background: #ffe082;
+      color: #b28704;
+      border: 2px solid #b28704;
+    }
+    #bucket-btn.selected {
+      background: #b3e0ff;
+      color: #1976d2;
+      border: 2px solid #1976d2;
+    }
+    #brush-slider {
+      accent-color: #1976d2;
+      vertical-align: middle;
+    }
+    #brush-size-label {
+      min-width: 32px;
+      display: inline-block;
+      text-align: left;
+      color: #1976d2;
+      font-weight: 600;
+    }
+    #chat-box {
+      background: #e3f2fd;
+      color: #222;
+      border-radius: 1rem !important;
+      max-height: 200px;
+      overflow-y: auto;
+      padding: 10px;
+      margin-bottom: 10px;
+      font-size: 1.05rem;
+    }
+    #chat-form {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 10px;
+    }
+    .gallery-link {
+      color: #1976d2;
+      font-weight: 600;
+      text-decoration: none;
+      margin-left: 8px;
+      font-size: 1.1rem;
+    }
+    .gallery-link:hover { text-decoration: underline; }
+    /* Responsive toolbar */
+    .toolbar-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-bottom: 10px;
+      margin-top: 5px;
+    }
+    .toolbar-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 4px;
+    }
+    @media (max-width: 900px) {
+      #canvas { height: 300px; }
+    }
+    @media (max-width: 600px) {
+      #main-card { padding: 8px 2px; }
+      #canvas { height: 180px !important; max-width: 100vw; }
+      .cute-title { font-size: 2rem; }
+      .cute-app-title { font-size: 1.5rem; }
+      .toolbar-row { flex-direction: column; gap: 4px; }
+      .cute-app-title2 { font-size: 0.5rem; }
+      .toolbar-group { flex-wrap: wrap; gap: 6px; }
+      #toolbar-row button,
+      #toolbar-row input[type="color"],
+      #toolbar-row input[type="range"] {
+        margin-bottom: 4px;
+        max-width: 100%;
+        flex: 1 1 auto;
+      }
+    }
+    @media (max-width: 400px) {
+      .toolbar-row button { width: 100%; min-width: 0; }
     }
   </style>
 </head>
