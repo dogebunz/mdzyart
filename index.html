@@ -302,8 +302,8 @@
                 <span class="profile-pic-circle" style="background:#81c784;">3</span>
               </label>
               <label>
-                <input type="radio" name="profile-pic" value="4" class="d-none">
-                <span class="profile-pic-circle" style="background:#e57373;">4</span>
+                <input type="radio" name="profile-pic" value="yuna.jpg" class="d-none">
+                <span class="yuna.jpg" style="background:#e57373;">4</span>
               </label>
               <label>
                 <input type="radio" name="profile-pic" value="ryujin.jpg" class="d-none">
@@ -734,6 +734,10 @@
       if (profilePic === "ryujin.jpg") {
         return `<span class="profile-pic-chat" style="background:#fff; padding:0;">
           <img src="ryujin.jpg" alt="profile">
+        </span>`;
+      }else  if (profilePic === "yuna.jpg") {
+        return `<span class="profile-pic-chat" style="background:#fff; padding:0;">
+          <img src="yuna.jpg" alt="profile">
         </span>`;
       }
       const color = profilePicColors[profilePic] || "#ba68c8";
