@@ -573,6 +573,25 @@
       socket.emit('chat', { room: currentRoom, message: msg, name: userName });
       chatInput.value = '';
     };
+
+    document.getElementById('upload-btn').onclick = async () => {
+  const dataUrl = canvas.toDataURL('image/png');
+  const res = await fetch('https://YOUR-BACKEND-URL.onrender.com/upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      image: dataUrl,
+      name: userName || 'Anonymous',
+      time: Date.now()
+    })
+  });
+  if (res.ok) {
+    alert('Uploaded to gallery!');
+  } else {
+    alert('Upload failed.');
+  }
+};
+
   </script>
 </body>
 </html>
