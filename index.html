@@ -190,7 +190,6 @@
       font-size: 1.1rem;
     }
     .gallery-link:hover { text-decoration: underline; }
-    /* Responsive toolbar */
     .toolbar-row {
       display: flex;
       flex-wrap: wrap;
@@ -223,6 +222,9 @@
       transition: border 0.2s;
       box-shadow: 0 1px 4px #b3e0ff44;
       user-select: none;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
     }
     input[name="profile-pic"]:checked + .profile-pic-circle {
       border: 2px solid #1976d2;
@@ -242,6 +244,13 @@
       margin-right: 6px;
       vertical-align: middle;
       user-select: none;
+      overflow: hidden;
+      background-size: cover;
+      background-position: center;
+    }
+    .profile-pic-chat img, .profile-pic-circle img {
+      width: 100%; height: 100%; object-fit: cover; border-radius: 50%;
+      display: block;
     }
     @media (max-width: 900px) {
       #canvas { height: 300px; }
@@ -267,7 +276,6 @@
   </style>
 </head>
 <body>
-  <!-- Cute App Title -->
   <div class="cute-app-title text-center my-3">mdzy art place</div>
 
   <!-- Welcome Modal -->
@@ -283,33 +291,25 @@
             <div class="mb-3 d-flex justify-content-center gap-2" id="profile-pic-row">
               <label>
                 <input type="radio" name="profile-pic" value="1" class="d-none" checked>
-                <span class="profile-pic-circle" style="background:#ffb74d; padding:0;">
-  <img src="ryujin.jpg" alt="profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-</span>
+                <span class="profile-pic-circle" style="background:#ffb74d;">1</span>
               </label>
               <label>
                 <input type="radio" name="profile-pic" value="2" class="d-none">
-                <span class="profile-pic-circle" style="background:#ffb74d; padding:0;">
-  <img src="ryujin.jpg" alt="profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-</span>
+                <span class="profile-pic-circle" style="background:#64b5f6;">2</span>
               </label>
               <label>
                 <input type="radio" name="profile-pic" value="3" class="d-none">
-                <span class="profile-pic-circle" style="background:#ffb74d; padding:0;">
-  <img src="ryujin.jpg" alt="profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-</span>
+                <span class="profile-pic-circle" style="background:#81c784;">3</span>
               </label>
               <label>
                 <input type="radio" name="profile-pic" value="4" class="d-none">
-               <span class="profile-pic-circle" style="background:#ffb74d; padding:0;">
-  <img src="ryujin.jpg" alt="profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-</span>
+                <span class="profile-pic-circle" style="background:#e57373;">4</span>
               </label>
               <label>
-                <input type="radio" name="profile-pic" value="5" class="d-none">
-                <span class="profile-pic-circle" style="background:#ffb74d; padding:0;">
-  <img src="ryujin.jpg" alt="profile" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">
-</span>
+                <input type="radio" name="profile-pic" value="ryujin.jpg" class="d-none">
+                <span class="profile-pic-circle" style="background:#fff; padding:0;">
+                  <img src="ryujin.jpg" alt="profile">
+                </span>
               </label>
             </div>
             <input type="text" id="user-name" class="form-control mb-3" placeholder="Enter your name" maxlength="16" required style="max-width:220px;display:inline-block;">
@@ -727,13 +727,21 @@
       "1": "#ffb74d",
       "2": "#64b5f6",
       "3": "#81c784",
-      "4": "#e57373",
-      "5": "#ba68c8"
+      "4": "#e57373"
     };
 
+    function getProfilePicHTML(profilePic) {
+      if (profilePic === "ryujin.jpg") {
+        return `<span class="profile-pic-chat" style="background:#fff; padding:0;">
+          <img src="ryujin.jpg" alt="profile">
+        </span>`;
+      }
+      const color = profilePicColors[profilePic] || "#ba68c8";
+      return `<span class="profile-pic-chat" style="background:${color};">${profilePic || "?"}</span>`;
+    }
+
     socket.on('chat', ({ id, message, name, profilePic }) => {
-      const color = profilePicColors[profilePic] || "#bdbdbd";
-      const picCircle = `<span class="profile-pic-chat" style="background:${color};">${profilePic || "?"}</span>`;
+      const picCircle = getProfilePicHTML(profilePic);
       const displayName = name ? `<span style="color:#1976d2;font-weight:600;">${name}</span>` : `<b>${id}</b>`;
       addMessage(`${picCircle}${displayName}: ${message}`);
     });
