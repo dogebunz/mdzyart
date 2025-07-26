@@ -1,3 +1,14 @@
+let onlineCount = 0;
+
+io.on('connection', (socket) => {
+  onlineCount++;
+  io.emit('viewerCount', onlineCount);
+
+  socket.on('disconnect', () => {
+    onlineCount = Math.max(0, onlineCount - 1);
+    io.emit('viewerCount', onlineCount);
+  });
+
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -175,3 +186,5 @@ app.post('/star', (req, res) => {
 // --- Start the server (MUST use server.listen, not app.listen) ---
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log('Server running on port', PORT));
+
+});
