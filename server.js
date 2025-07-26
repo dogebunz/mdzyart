@@ -1,5 +1,3 @@
-let onlineCount = 0;
-
 const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
@@ -89,6 +87,7 @@ const io = new Server(server, {
 
 const userNames = {};
 const canvasHistory = {}; // { roomName: [ {from, to, color, size, isEraser}, ... ] }
+let onlineCount = 0;
 
 io.on('connection', (socket) => {
   onlineCount++;
