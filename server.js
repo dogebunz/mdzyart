@@ -140,6 +140,29 @@ io.on('connection', (socket) => {
   });
 });
 
+const fs = require('fs');
+const path = require('path');
+const starsFile = path.join(__dirname, 'stars.json');
+let stars = {};
+if (fs.existsSync(starsFile)) {
+  stars = JSON.parse(fs.readFileSync(starsFile, 'utf8'));
+}
+
+// Endpoint to get all stars
+app.get('/stars', (req, res) => {
+  res.json(stars);
+});
+
+// Endpoint to star an artwork
+app.post('/star', (req, res) => {
+  const { filename } = req.body;
+  if (!filename) return res.status(400).send('Missing filename');
+  if (!stars[filename]) stars[filename] = 0;
+  stars[filename]++;
+  fs.writeFileSync(starsFile, JSON.stringify(stars, null, 2));
+  res.json({ stars: stars[filename] });
+});
+
 // --- Start the server (MUST use server.listen, not app.listen) ---
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => console.log('Server running on port', PORT));
