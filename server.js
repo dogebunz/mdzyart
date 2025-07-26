@@ -140,6 +140,15 @@ io.on('connection', (socket) => {
   });
 });
 
+socket.on('chat', ({ room, message, name, profilePic }) => {
+  io.to(room).emit('chat', {
+    id: socket.id.slice(0, 5),
+    message,
+    name,
+    profilePic
+  });
+});
+
 const fs = require('fs');
 const path = require('path');
 const starsFile = path.join(__dirname, 'stars.json');
