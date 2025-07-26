@@ -113,6 +113,12 @@ io.on('connection', (socket) => {
     }
   });
 
+  // --- Chat Message ---
+  socket.on('chat', ({ room, message, name }) => {
+    const displayName = name || userNames[socket.id] || 'Anonymous';
+    io.to(room).emit('chat', { id: socket.id.slice(0, 5), message, name: displayName });
+  });
+
   // --- Leave Room ---
   socket.on('leaveRoom', (room) => {
     socket.leave(room);
@@ -121,11 +127,7 @@ io.on('connection', (socket) => {
     socket.currentRoom = null;
   });
 
-  // --- Chat Message ---
-  socket.on('chat', ({ room, message, name }) => {
-    const displayName = name || userNames[socket.id] || 'Anonymous';
-    io.to(room).emit('chat', { id: socket.id.slice(0, 5), message, name: displayName });
-  });
+
 
   // --- Drawing ---
   socket.on('draw', ({ room, data }) => {
