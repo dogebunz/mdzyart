@@ -264,6 +264,9 @@
           <a href="gallery.html" class="gallery-link" target="_blank">🎨 View Gallery</a>
         </div>
         <div>
+          <div id="viewer-count" style="text-align:center;font-size:1.1rem;color:#1976d2;margin-bottom:8px;">
+  🟢 online: <span id="viewer-num">0</span>
+</div>
           <button id="music-toggle" class="btn btn-cute btn-sm" title="Toggle music">🔊</button>
         </div>
       </div>
@@ -321,6 +324,11 @@
     // === SOCKET.IO ===
     const socket = io(SERVER_URL);
 
+    //online users 
+    socket.on('viewerCount', function(count) {
+  document.getElementById('viewer-num').textContent = count;
+});
+    
     // === Modal logic ===
     const welcomeModalEl = document.getElementById('welcomeModal');
     const welcomeModal = new bootstrap.Modal(welcomeModalEl);
