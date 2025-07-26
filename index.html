@@ -576,7 +576,7 @@
 
     document.getElementById('upload-btn').onclick = async () => {
   const dataUrl = canvas.toDataURL('image/png');
-  const res = await fetch('https://YOUR-BACKEND-URL.onrender.com/upload', {
+  const res = await fetch('https://mdzyart.onrender.com/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
