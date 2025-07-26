@@ -36,12 +36,14 @@
       cursor: pointer;
       position: relative;
       transition: box-shadow 0.2s;
+      border-radius: 0 !important;
     }
     .gallery-item:hover { box-shadow: 0 4px 16px #1976d244; }
     .gallery-item img {
       width: 100%; height: 100%; object-fit: cover;
       transition: transform 0.2s;
       display: block;
+      border-radius: 0 !important;
     }
     .gallery-meta {
       position: absolute; bottom: 8px; left: 0; right: 0;
@@ -52,6 +54,7 @@
       font-family: 'Baloo 2', cursive, sans-serif;
       font-weight: 600;
       letter-spacing: 1px;
+      border-radius: 0 !important;
     }
     .modal-img {
       width: 100%;
@@ -60,6 +63,22 @@
       display: block;
       margin: 0 auto;
       background: #fff;
+      border-radius: 0 !important;
+    }
+    .btn-cute {
+      border-radius: 0 !important;
+      font-weight: 600;
+      box-shadow: none;
+      border: none;
+      background: #1976d2;
+      color: #fff;
+      padding: 10px 18px;
+      letter-spacing: 1px;
+      transition: background 0.2s, color 0.2s;
+    }
+    .btn-cute:hover {
+      background: #1565c0;
+      color: #fff;
     }
     @media (max-width: 600px) {
       .gallery-item { width: 120px; height: 120px; }
@@ -68,13 +87,16 @@
   </style>
 </head>
 <body>
-  <div class="gallery-title">mdzy art gallery</div>
+  <div class="d-flex align-items-center justify-content-start mb-3" style="max-width:900px;margin:0 auto;">
+    <a href="index.html" class="btn btn-cute" style="margin-right:12px;">← Back</a>
+    <div class="gallery-title flex-grow-1">mdzy art gallery</div>
+  </div>
   <div id="gallery" class="gallery-grid"></div>
 
   <!-- Modal for full image -->
   <div class="modal fade" id="imgModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content" style="background: #f5f7fa;">
+      <div class="modal-content" style="background: #f5f7fa; border-radius:0;">
         <div class="modal-body text-center">
           <img id="modalImg" class="modal-img" src="" alt="Full drawing">
         </div>
