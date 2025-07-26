@@ -21,11 +21,14 @@ const BRANCH = 'main'; // or 'master' or your branch
 
 app.post('/upload', async (req, res) => {
   const { image, name, time } = req.body;
+  console.log('Upload request received:', { name, time, imageLength: image.length });
+  console.log('GITHUB_TOKEN:', !!GITHUB_TOKEN, 'REPO:', REPO, 'BRANCH:', BRANCH);
+
   if (!image || !name) return res.status(400).send('Missing data');
 
   const base64 = image.split(',')[1];
   const safeName = name.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-  const filename = `gallery/${Date.now()}_${safeName}.png`;
+  const filename = `gallery/${Date.now()}_${safeName}.jpg`;
 
   try {
     const response = await fetch(`https://api.github.com/repos/${REPO}/contents/${filename}`, {
@@ -41,18 +44,20 @@ app.post('/upload', async (req, res) => {
       })
     });
 
+    const text = await response.text();
+    console.log('GitHub API response:', response.status, text);
+
     if (response.ok) {
       res.sendStatus(200);
     } else {
-      const error = await response.json();
-      console.error('GitHub API error:', error);
-      res.status(500).json(error);
+      res.status(500).send(text);
     }
   } catch (err) {
     console.error('Server error:', err);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 app.get('/', (req, res) => res.send('mdzyart GitHub upload backend running!'));
 
